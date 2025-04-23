@@ -1,0 +1,17 @@
+{
+    "name": "cmcintosh/httpstack",
+    "description": "Code for website.",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "App/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Chris McIntosh",
+            "email": "httpstack@gmail.com"
+        }
+    ],
+    "require": {}
+}
