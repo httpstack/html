@@ -7,7 +7,7 @@ class TemplateMiddleware
     protected $templatePath;
     public $response;
     public $request;
-    public function __construct($request, $response, $container)
+    public function __construct($request, $response, $container, $next)
     {
         $this->container = $container;
 

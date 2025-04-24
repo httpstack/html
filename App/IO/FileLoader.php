@@ -107,6 +107,9 @@ class FileLoader {
         return $files;
     }
 }
+<<<<<<< HEAD
 $of = new FileLoader(['/var/www/html/App/Views/Templates']);
 var_dump($of->get('/var/www/html/App/Views/Templates'));
 var_dump($of->get('template.base.html'));
+=======
+>>>>>>> 022b3d3 (Add initial style.css file)
