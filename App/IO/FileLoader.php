@@ -65,12 +65,20 @@ class FileLoader {
     /**
      * Gets the full path of a file if it exists, or throws an error.
      */
-    public function get(string $filename): string {
-        if ($this->has($filename)) {
-            return $this->files[$filename];
-        }
 
-        throw new \Exception("File '{$filename}' not found.");
+    public function get(string $path): array|string {
+        // Check if the path is a directory
+        if (isset($this->dirs[$path])) {
+            return $this->dirs[$path]; // Return the directory's contents
+        }
+    
+        // Check if the path is a file
+        if (isset($this->files[basename($path)])) {
+            return $this->files[basename($path)]; // Return the file's full path
+        }
+    
+        // If neither, throw an exception
+        throw new \Exception("Path '{$path}' not found.");
     }
 
     /**
@@ -100,4 +108,5 @@ class FileLoader {
     }
 }
 $of = new FileLoader(['/var/www/html/App/Views/Templates']);
+var_dump($of->get('/var/www/html/App/Views/Templates'));
 var_dump($of->get('template.base.html'));
