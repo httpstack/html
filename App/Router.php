@@ -62,11 +62,7 @@ class Router {
 
         throw new \Exception('Invalid route handler');
     }
-    public function dispatch($request, $response, $container = null): void {
-        // Get the method and URI from the Request object
-        $method = $request->getMethod();
-        $uri = $request->getUri();
-    
+    private function processQueryString($uri, $request): string {
         // Separate the path and query string
         $uriParts = explode('?', $uri, 2);
         $path = $uriParts[0]; // The path part of the URI
@@ -78,6 +74,35 @@ class Router {
         // Set query string parameters on the Request object
         $request->setQueryParams($queryParams);
     
+        return $path; // Return the path part of the URI
+    }
+    public function dispatch($request, $response, $container = null): void {
+        // Get the method and URI from the Request object
+
+        //
+        $method = $request->getMethod();
+        $uri = $request->getUri();
+    
+        $path = $this->processQueryString($uri, $request);
+
+
+        $middlewareIndex = 0;
+        $middlewareCount = count($this->routeMiddleWare);
+        
+        $next = function () use (&$middlewareIndex, $middlewareCount, $request, $response, $container, &$next) {
+            if ($middlewareIndex < $middlewareCount) {
+                $mw = $this->routeMiddleWare[$middlewareIndex++];
+                if ($mw['path'] === '.*' || preg_match('#^' . $mw['path'] . '$#', $request->getUri())) {
+                    $callable = $this->makeCallable($mw['handler']);
+                    $callable($request, $response, $container, $next);
+                } else {
+                    $next();
+                }
+            }
+        };
+        
+        // Start the middleware chain
+        $next();
         // Process middleware
         foreach ($this->routeMiddleWare as $middleware) {
             if ($middleware['path'] === '.*' || preg_match('#^' . $middleware['path'] . '$#', $path)) {
@@ -85,7 +110,7 @@ class Router {
                 $callable = $this->makeCallable($middleware['handler']);
     
                 // Call the middleware with the required arguments
-                $callable($request, $response, $container);
+                $callable($request, $response, $container, $next);
             }
         }
     

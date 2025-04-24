@@ -1,5 +1,6 @@
 <?php
 namespace Base\App;
+use App\Container;
 use \DOMElement;
 use \DOMXPath;
 use \DOMDocument;
@@ -12,12 +13,15 @@ class _Template extends DOMDocument
 
     public function __construct
     (
-        private string $strBaseTemplate,
-        private array $arrAssets = [["css" => []], ["js" => []]],
-        private array $arrKeyVals = [],
+        private Container $container
     )
     {
         parent::__construct('1.0', 'UTF-8');
+        $arrAssets = [["css" => ['style.css']], ["js" => ['app.js']]];
+        $basePath = $this->container->settings['paths']['base'];
+        $appPath = $basePath . $this->container->settings['paths']['appPath'];
+        $baseTemplate = $appPath . $this->container->settings['paths']['baseTemplatePath'] ; 
+        $assetPath = $basePath . $this->container->settings['paths']['assetPath'];
         $this->preserveWhiteSpace = false;
         $this->formatOutput = true;
 
@@ -27,7 +31,7 @@ class _Template extends DOMDocument
     }
     private function loadAssets(): void
     {
-
+        $strAssetPath = 
     }
     public function getByID(string $id): ?\DOMNode
     {

@@ -79,5 +79,23 @@ return[
             'vendor/fonts/'
         ],
         'baseTemplatePath' => 'Views/Templates/template.base.html'
-    ]
+    ],"Template" =>["asset_flags" => "css,js,img,fonts",
+        "asset_paths" => [
+            'css' => [
+                'style.css',
+                'vendor/css/bootstrap.min.css'
+            ],
+            'js' => [
+                'app.js',
+                'vendor/js/jquery.min.js'
+            ],
+            'img' => [
+                'logo.png',
+                'vendor/images/logo.png'
+            ],
+            'fonts' => [
+                'OpenSans-Regular.ttf',
+                'vendor/fonts/OpenSans-Bold.ttf'
+            ]
+        ]
     ];

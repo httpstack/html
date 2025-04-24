@@ -1,6 +1,7 @@
 <?php
 namespace Base\App\Controllers\Middleware;
 use Base\App\_Template;
+use Base\App\Template;
 class TemplateMiddleware
 {
     protected $container;
@@ -11,7 +12,13 @@ class TemplateMiddleware
     {
         $this->container = $container;
 
-        $this->templatePath = $this->container->make('config',['template']);
+        //creste template instance passing in the base template path
+        //and the array of dirs to get assets
+       
+        $objTemplate = new _Template(
+            $baseTemplate,
+            $arrAssets
+        );
         $this->response = $response;
         $this->request = $request;
     }
