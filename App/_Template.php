@@ -1,44 +1,77 @@
 <?php
 namespace App;
 use App\Container;
-use DOMElement;
-use DOMXPath;
-use DOMDocument;
+use \DOMElement;
+use \DOMXPath;
+use \DOMDocument;
+use \DOMNode;
+use \DOMDocumentFragment;
+use \DOMException;
+use \DOMNodeList;
+use \DOMText;
+use \DOMAttr;
+use \DOMNamedNodeMap;
 
 class _Template extends DOMDocument
 {
     private DOMXPath $objDocumentMAP;
     private string $basePath;
-    private string $baseTemplate;
-    private string $assetPath;
-    private Container $container;
+    private string $layoutPath;
+    private string $assetUri;
+ 
 
-    public function __construct(Container $container)
+    /**
+     * The document before the handlebar expressions are replaced
+     * @var string
+     */
+    public string $htmDoc= '';
+
+    public function __construct(private Container $container)
     {
-        $this->container = $container;
+        
         parent::__construct('1.0', 'UTF-8');
+
         extract($this->container->settings['paths']);
-        var_dump(get_defined_vars());
+
+        $this->layoutPath = $basePath.$layout;
+        $this->assetUri = $assetUri;
         $this->preserveWhiteSpace = false;
         $this->formatOutput = true;
 
-        $this->loadHTMLFile($baseTemplate, LIBXML_NOWARNING | LIBXML_NOERROR | LIBXML_NOBLANKS);
+        $htmDoc = file_get_contents($this->layoutPath);
+        @$this->loadHTML($htmDoc,  LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
+  
         $this->objDocumentMAP = new DOMXPath($this); 
         $this->loadAssets();
+        $this->container->bind('template', $this);
+        /**/
     }
-
+    private function getRaw(): void
+    {
+        $this->htmRaw = $this->saveHTML();
+        //echo $this->htmRaw;
+    }
+    public function getRendered(): string
+    {
+        $this->htmRendered = $this->saveHTML();
+        return $this->htmRendered;
+    }
+    //loadBaseTemplate
     private function loadAssets(): void
     {
         $arrAssets = $this->container->settings['Template']['assets'];
+        //var_dump($arrAssets);
+    
+        foreach ($arrAssets as $dir => $files) {
 
-        foreach ($arrAssets as $dir) {
-            foreach($dir as $file){
+            
+            foreach($files as $file){
                 switch($dir){
                     case 'css/':
-                        $this->insertHTML($this->getByTag('head'), "<link rel='stylesheet' href='$this->assetPath$dir$file' />");
+                        $this->insertHTML($this->getByTag('head'), "<link rel='stylesheet' href='$this->assetUri$dir$file' />");
                         break;
                     case 'js/':
-                        $this->insertHTML($this->getByTag('body'), "<script src='$this->assetPath$dir$file'></script>");
+                        $this->insertHTML($this->getByTag('body'), "<script src='$this->assetUri$dir$file'></script>");
                         break;
                     /*
                     case 'img/':
@@ -56,19 +89,19 @@ class _Template extends DOMDocument
     {
         return (bool) preg_match('/<[^<]+>/', $strHTML);
     }
-    public function getByClass(string $strClass): ?\DOMNode
+    public function getByClass(string $strClass): ?DOMNode
     {
         return $this->getNode("//*[contains(concat(' ', normalize-space(@class), ' '), ' $strClass ')]");
     }
-    public function getByName(string $strName): ?\DOMNode
+    public function getByName(string $strName): ?DOMNode
     {
         return $this->getNode("//*[@name='$strName']");
     }
-    public function getByAttribute(string $strAttribute): ?\DOMNode
+    public function getByAttribute(string $strAttribute): ?DOMNode
     {
         return $this->getNode("//*[@$strAttribute]");
     }
-    public function arrToUl(array $arr, $raw, $cfg=[]): string
+    public function arrToUl(array $arr, $raw, $cfg=[]): string|DOMDocumentFragment
     {
         //$cfg will have a class list for each element 
         // used inthe navbar
@@ -89,58 +122,58 @@ class _Template extends DOMDocument
         return $fragment;    
     }
 
-    public function getByAttributeValue(string $strAttribute, string $strValue): ?\DOMNode
+    public function getByAttributeValue(string $strAttribute, string $strValue): ?DOMNode
     {
         return $this->getNode("//*[@$strAttribute='$strValue']");
     }
-    public function getByAttributeContains(string $strAttribute, string $strValue): ?\DOMNode
+    public function getByAttributeContains(string $strAttribute, string $strValue): ?DOMNode
     {
         return $this->getNode("//*[contains(concat(' ', normalize-space(@$strAttribute), ' '), ' $strValue ')]");
     }
-    public function getByIDContains(string $strID): ?\DOMNode
+    public function getByIDContains(string $strID): ?DOMNode
     {
         return $this->getNode("//*[contains(concat(' ', normalize-space(@id), ' '), ' $strID ')]");
     }
-    public function getByIDContainsValue(string $strID, string $strValue): ?\DOMNode
+    public function getByIDContainsValue(string $strID, string $strValue): ?DOMNode
     {
         return $this->getNode("//*[@id='$strID' and contains(concat(' ', normalize-space(@id), ' '), ' $strValue ')]");
     }
-    public function getByIDContainsClass(string $strID, string $strClass): ?\DOMNode
+    public function getByIDContainsClass(string $strID, string $strClass): ?DOMNode
     {
         return $this->getNode("//*[@id='$strID' and contains(concat(' ', normalize-space(@class), ' '), ' $strClass ')]");
     }
-    public function getByIDClass(string $strID, string $strClass): ?\DOMNode
+    public function getByIDClass(string $strID, string $strClass): ?DOMNode
     {
         return $this->getNode("//*[@id='$strID' and contains(concat(' ', normalize-space(@class), ' '), ' $strClass ')]");
     }
 
-    public function getByID(string $id): ?\DOMNode
+    public function getByID(string $id): ?DOMNode
     {
         return $this->getNode("//*[@id='$id']");
     }
 
-    public function getByTag(string $strTag): ?\DOMNode
+    public function getByTag(string $strTag): ?DOMNode
     {
         return $this->getNode("//$strTag");
     }
 
-    public function getNode(string $strXPath): ?\DOMNode
+    public function getNode(string $strXPath): ?DOMNode
     {
         return $this->objDocumentMAP->query($strXPath)->item(0);
     }
 
-    public function insertText(\DOMNode $node, string $strText): void
+    public function insertText(DOMNode $node, string $strText): void
     {
         $node->textContent = $strText;
     }
 
-    public function insertHTML(\DOMNode $node, string $strHTML): void
+    public function insertHTML(DOMNode $node, string $strHTML): void
     {
         $objFragment = $this->createFragment($strHTML);
         $node->appendChild($objFragment);
     }
 
-    public function createFragment(string $strHTML): \DOMDocumentFragment
+    public function createFragment(string $strHTML): DOMDocumentFragment
     {
         $objFragment = $this->createDocumentFragment();
         $objFragment->appendXML($strHTML);

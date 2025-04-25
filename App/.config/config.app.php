@@ -1,5 +1,5 @@
 <?php
-$strBasePath = "/var/www/html/";
+$strBasePath = "/";
 $strAppPath = $strBasePath . 'App/';
 $strPublicPath = $strBasePath . 'public/';
 return[
@@ -59,13 +59,15 @@ return[
         ],
     ],
     'paths' => [
-        'basePath' => $strBasePath,
+        'basePath' => '/var/www/html/',
+        'baseUrl' => 'http://localhost/',
+        'baseUri' => '/',
         'appPath' => $strAppPath,
         'viewPath' => 'App/Views/',
         'publicPath' => $strBasePath . 'public/',
-        'templatePath' => $strAppPath . 'Views/Templates/',
-        'assetPath' => $strPublicPath . 'assets/',
-        'baseTemplate' => 'template.base.html'
+        'templatePath' => 'App/Views/Templates/',
+        'assetUri' => 'public/assets/',
+        'layout' => 'App/Views/Templates/template.layout.html'
     ],"Template" =>[
         "assets" => [
             'css/' => [
