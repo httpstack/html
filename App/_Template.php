@@ -17,7 +17,7 @@ class _Template extends DOMDocument
     private DOMXPath $objDocumentMAP;
     private string $basePath;
     private string $layoutPath;
-    private string $assetUri;
+    
  
 
     /**
@@ -34,7 +34,7 @@ class _Template extends DOMDocument
         extract($this->container->settings['paths']);
 
         $this->layoutPath = $basePath.$layout;
-        $this->assetUri = $assetUri;
+
         $this->preserveWhiteSpace = false;
         $this->formatOutput = true;
 
@@ -42,22 +42,13 @@ class _Template extends DOMDocument
         @$this->loadHTML($htmDoc,  LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
   
         $this->objDocumentMAP = new DOMXPath($this); 
-        $this->loadAssets();
+        $this->loadAssets($assetUri);
         $this->container->bind('template', $this);
         /**/
     }
-    private function getRaw(): void
-    {
-        $this->htmRaw = $this->saveHTML();
-        //echo $this->htmRaw;
-    }
-    public function getRendered(): string
-    {
-        $this->htmRendered = $this->saveHTML();
-        return $this->htmRendered;
-    }
+
     //loadBaseTemplate
-    private function loadAssets(): void
+    private function loadAssets($assetUri) : void
     {
         $arrAssets = $this->container->settings['Template']['assets'];
         //var_dump($arrAssets);
@@ -68,10 +59,10 @@ class _Template extends DOMDocument
             foreach($files as $file){
                 switch($dir){
                     case 'css/':
-                        $this->insertHTML($this->getByTag('head'), "<link rel='stylesheet' href='$this->assetUri$dir$file' />");
+                        $this->insertHTML($this->getByTag('head'), "<link rel='stylesheet' href='$assetUri$dir$file' />");
                         break;
                     case 'js/':
-                        $this->insertHTML($this->getByTag('body'), "<script src='$this->assetUri$dir$file'></script>");
+                        $this->insertHTML($this->getByTag('body'), "<script src='$assetUri$dir$file'></script>");
                         break;
                     /*
                     case 'img/':
