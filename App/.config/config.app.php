@@ -1,4 +1,7 @@
 <?php
+$strBasePath = "/var/www/html/";
+$strAppPath = $strBasePath . 'App/';
+$strPublicPath = $strBasePath . 'public/';
 return[
     'name' => 'MyApp',
     'version' => '1.0.0',
@@ -56,46 +59,31 @@ return[
         ],
     ],
     'paths' => [
-        'base' => '/var/www/html/',
-        'appPath' => 'App/',
-        'viewPath' => 'Views/',
-        'publicPath' => 'public/',
-        'templatePath' => 'Views/Templates/',
-        'assetPath' => 'assets/',
-        'jsPaths' => [
-            'js/',
-            'vendor/js/' 
-        ],
-        'cssPaths' => [
-            'css/',
-            'vendor/css/'
-        ],
-        'imgPaths' => [
-            'images/',
-            'vendor/images/'
-        ],
-        'fontsPaths' => [
-            'fonts/',
-            'vendor/fonts/'
-        ],
-        'baseTemplatePath' => 'Views/Templates/template.base.html'
-    ],"Template" =>["asset_flags" => "css,js,img,fonts",
-        "asset_paths" => [
-            'css' => [
+        'basePath' => $strBasePath,
+        'appPath' => $strAppPath,
+        'viewPath' => 'App/Views/',
+        'publicPath' => $strBasePath . 'public/',
+        'templatePath' => $strAppPath . 'Views/Templates/',
+        'assetPath' => $strPublicPath . 'assets/',
+        'baseTemplate' => 'template.base.html'
+    ],"Template" =>[
+        "assets" => [
+            'css/' => [
                 'style.css',
-                'vendor/css/bootstrap.min.css'
+                'bootstrap.min.css'
             ],
-            'js' => [
+            'js/' => [
                 'app.js',
-                'vendor/js/jquery.min.js'
+                'jquery.min.js'
             ],
-            'img' => [
+            'img/' => [
                 'logo.png',
                 'vendor/images/logo.png'
             ],
-            'fonts' => [
+            'fonts/' => [
                 'OpenSans-Regular.ttf',
                 'vendor/fonts/OpenSans-Bold.ttf'
             ]
-        ]
-    ];
+            ]
+    ]
+];

@@ -33,7 +33,7 @@ class Config implements ConfigInterface
         return $this->settings[$key] ?? null;
     }
 
-    public function set(string $key, mixed $value): void
+    public function set(string $key, string $value): void
     {
         $this->settings[$key] = $value;
     }

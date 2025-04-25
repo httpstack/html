@@ -39,27 +39,43 @@ class Router {
      * @return callable The converted callable.
      * @throws \Exception If the handler is invalid.
      */
+
     protected function makeCallable($handler): callable
     {
+        // If the handler is an array (e.g., [ClassName, MethodName])
         if (is_array($handler) && count($handler) === 2) {
             [$class, $method] = $handler;
-
-            // Check if the method is static
+    
+            // Check if the method exists
             if (method_exists($class, $method)) {
                 $reflection = new \ReflectionMethod($class, $method);
                 if (!$reflection->isStatic()) {
-                    // Create an instance of the class if the method is not static
+                    // Check if the class exists
                     $class = new $class();
+                    // Create an instance of the class if the method is not static
                 }
             }
-
+    
             return [$class, $method];
         }
-
+    
+        // If the handler is a callable (e.g., a closure or function), return it as-is
         if (is_callable($handler)) {
             return $handler;
         }
-
+    
+        // If the handler is a class name, instantiate it and call __invoke
+        if (is_string($handler) && class_exists($handler)) {
+            // Check if the class has a __invoke method
+            $instance = new $handler();
+    
+            if (method_exists($instance, '__invoke')) {
+                return $instance; // The __invoke method will be called
+            }
+    
+            throw new \Exception("Class '{$handler}' does not have an __invoke method.");
+        }
+    
         throw new \Exception('Invalid route handler');
     }
     private function processQueryString($uri, $request): string {
@@ -93,7 +109,7 @@ class Router {
             if ($middlewareIndex < $middlewareCount) {
                 $mw = $this->routeMiddleWare[$middlewareIndex++];
                 if ($mw['path'] === '.*' || preg_match('#^' . $mw['path'] . '$#', $request->getUri())) {
-                    $callable = $this->makeCallable($mw['handler']);
+                    $callable = $this->makeCallable($mw['handler'], [$request, $response, $container, $next]);
                     $callable($request, $response, $container, $next);
                 } else {
                     $next();

@@ -1,32 +1,27 @@
 <?php
-namespace Base\App\Controllers\Middleware;
-use Base\App\_Template;
-use Base\App\Template;
+namespace App\Controllers\Middleware;
+use App\_Template;
+use App\Template;
 class TemplateMiddleware
 {
-    protected $container;
+    public $container;
     protected $templatePath;
     public $response;
     public $request;
-    public function __construct($request, $response, $container, $next)
-    {
-        $this->container = $container;
 
-        //creste template instance passing in the base template path
-        //and the array of dirs to get assets
-       
-        $objTemplate = new _Template(
-            $baseTemplate,
-            $arrAssets
-        );
-        $this->response = $response;
-        $this->request = $request;
-    }
 
-    public function handle($request, $next)
+    public function init($request, $response, $container, $next)
     {
-        // Set the template path in the container
-        $this->container->bind('template.path', $this->templatePath);
+        // Initialize the template engine
+        $template = new _Template($container);
+
+        // Set the template engine in the response object
+        $response->setTemplate($template);
+
+        // Set the base template in the response object
+        $response->setBaseTemplate($this->baseTemplate);
+
+
 
         // Call the next middleware or controller
         return $next($request);

@@ -23,7 +23,7 @@ interface ConfigInterface
      * @param mixed $value
      * @return void
      */
-    public function set(string $key, mixed $value): void;
+    public function set(string $key, string $value): void;
     /**
      * Check if a configuration key exists.
      *
