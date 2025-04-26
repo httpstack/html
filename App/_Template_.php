@@ -26,21 +26,17 @@ class _Template extends DOMDocument
      */
     public string $htmDoc= '';
 
-    public function __construct(private Container $container)
-    {
-        
-
-    }
     public function render(string $strTemplate, array $arrData = []): string
     {
         parent::__construct('1.0', 'UTF-8');
-        @$this->loadHTMLFile($strTemplate, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $this->loadHTMLFile($strTemplate);
         $this->objDocumentMAP = new DOMXPath($this);
 
         //var_dump($this->htmDoc);
         //var_dump($arrData);
         return $this->saveHTML();
     }
+
     //loadBaseTemplate
     private function loadAssets($assetUri) : void
     {

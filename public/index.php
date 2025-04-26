@@ -18,5 +18,6 @@ $objRouter = new Router();
 $objContainer = new Container("/var/www/html/App/.config/config.app.php");
 $objRouter->get('/home',  ['App\Controllers\Routes\HomeController', 'index']);
 $objRouter->before('.*', ['App\Controllers\Middleware\TemplateMiddleware', 'init']);
-//$objRouter->get('/user/{id}', ['App\Controllers\Routes\UserController', 'show']);
+$objRouter->get('/resume', 'App\Controllers\Routes\ResumeController');
+$objRouter->get('/user/{id}', ['App\Controllers\Routes\UserController', 'show']);
 $objRouter->dispatch($objReq, $objRes, $objContainer);
