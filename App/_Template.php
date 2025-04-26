@@ -17,6 +17,8 @@ class _Template extends DOMDocument
     private DOMXPath $objDocumentMAP;
     private string $basePath;
     private string $layoutPath;
+    private array $arrTemplates = [];   
+    private array $arrResources = [];
     
  
 
@@ -31,19 +33,24 @@ class _Template extends DOMDocument
         
 
     }
-    public function render(string $strTemplate, array $arrData = []): string
-    {
+    public function layout(string $strTemplateName){
+        $htmLayout = $this->arrTemplates[$strTemplateName];
+    }
+    private function loadFile(string $strTemplate){
         parent::__construct('1.0', 'UTF-8');
         @$this->loadHTMLFile($strTemplate, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        $this->objDocumentMAP = new DOMXPath($this);
-
-        //var_dump($this->htmDoc);
-        //var_dump($arrData);
+    }
+    public function render(string $strTemplate, array $arrData = []): string
+    {
+        $this->loadFile($strTemplate);
         return $this->saveHTML();
     }
-    //loadBaseTemplate
-    private function loadAssets($assetUri) : void
-    {
+    public function bind(string $strTemplateName, string $strContent){
+        $this->arrTemplates[$strTemplateName] = $strContent;
+    }
+    /*
+    loadBaseTemplate
+    private function loadAssets($assetUri) : void{
         $arrAssets = $this->container->settings['Template']['assets'];
         //var_dump($arrAssets);
     
@@ -58,18 +65,19 @@ class _Template extends DOMDocument
                     case 'js/':
                         $this->insertHTML($this->getByTag('body'), "<script src='$assetUri$dir$file'></script>");
                         break;
-                    /*
+                    
                     case 'img/':
                         $this->insertHTML($this->getByTag('body'), "<img src='$assetPath$dir$file' />");
                         break;
                     case 'fonts/':
                         $this->insertHTML($this->getByTag('head'), "<link rel='stylesheet' href='$assetPath$dir$file' />");
                         break;
-                    */
+                    
                 }
             }
         }
     }
+    */
     public function is_html(string $strHTML): bool
     {
         return (bool) preg_match('/<[^<]+>/', $strHTML);
