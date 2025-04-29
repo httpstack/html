@@ -8,15 +8,15 @@ use \DOMNode;
 use \DOMNodeList;
 use \DOMText;
 use \DOMElement;
-use App\Traits\DomHelper;
+use App\Traits\DomRoutines;
 /**
  * DomTemplate
  *
  * A powerful template engine extending DOMDocument and DOMXPath.
  */
-class DomTemplate extends DOMDocument
+class Template extends DOMDocument
 {
-    use DomHelper; // Include the DomHelper trait for additional DOM manipulation methods
+    use DomRoutines; // Include the DomHelper trait for additional DOM manipulation methods
      // helpers like createElement, appendAfter, find(), etc.
 
     protected DOMXPath $xpath;
@@ -24,7 +24,7 @@ class DomTemplate extends DOMDocument
     protected array $functions = [];
     protected ?string $assetsPath = null;
     protected bool $isBase = false;
-    public ?DomTemplate $view = null;
+    public ?Template $view = null;
     protected bool $debug = false;
 
     public function __construct(string $document, bool $isBase = false)
@@ -87,9 +87,9 @@ class DomTemplate extends DOMDocument
         echo "<pre>" . htmlentities($this->saveHTML()) . "</pre>";
     }
 
-    public function loadView(string $document): DomTemplate
+    public function loadView(string $document): Template
     {
-        $this->view = new DomTemplate($document);
+        $this->view = new Template($document);
         return $this->view;
     }
 
@@ -112,20 +112,20 @@ class DomTemplate extends DOMDocument
         $importedNode = $this->importNode($srcNode, true);
     
         // Append the imported node directly to the destination node
-        $this->domHelper_append($destNode, $importedNode);
+        $this->_append($destNode, $importedNode);
     
         // Move assets from view to base template
         $this->transferAssets($this->view);
     }
 
-    protected function transferAssets(DomTemplate $view): void
+    protected function transferAssets(Template $view): void
     {
         $scripts = $view->xpath->query("//script[@src]");
         foreach ($scripts as $script) {
             if ($script instanceof DOMElement) {
                 $newScript = $this->createElement('script');
                 $newScript->setAttribute('src', $this->fullAsset($script->getAttribute('src')));
-                $this->domhelper_findOne('body')->appendChild($newScript);
+                $this->_findOne('body')->appendChild($newScript);
             }
         }
     
@@ -135,7 +135,7 @@ class DomTemplate extends DOMDocument
                 $newLink = $this->createElement('link');
                 $newLink->setAttribute('rel', 'stylesheet');
                 $newLink->setAttribute('href', $this->fullAsset($link->getAttribute('href')));
-                $this->domhelper_findOne('head')->appendChild($newLink);
+                $this->_findOne('head')->appendChild($newLink);
             }
         }
     }

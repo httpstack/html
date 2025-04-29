@@ -1,4 +1,5 @@
 <?php
+defined('APP_INIT') or die('Direct access not allowed.');
 $strBasePath = "/";
 $strAppPath = $strBasePath . 'App/';
 $strPublicPath = $strBasePath . 'public/';

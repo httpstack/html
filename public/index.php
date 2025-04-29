@@ -2,7 +2,7 @@
 ini_set("display_errors", 1);
 ini_set("display_startup_errors", 1);
 error_reporting(E_ALL);
-
+define("APP_INIT", true);
 require '../vendor/autoload.php'; // If using Composer/autoload
 /*
 use App\DOM\DomTemplate;
@@ -50,14 +50,22 @@ use App\Router;
 use App\Http\Request;
 use App\Http\Response;
 use App\Container;
-use App\Controllers\Routes\UserController;
-use App\Controllers\Middleware\TemplateMiddleware;
-use App\Traits\DomHelper;
+use App\Controllers\Routes\{
+    UserController,
+    HomeController,
+    ResumeController
+};
+use App\Controllers\Middleware\{
+    TemplateMiddleware
+};
+
+use App\Traits\DomRoutines;
 
 $objReq = new Request();
 $objRes = new Response();
 $objRouter = new Router();
 $objContainer = new Container("/var/www/html/App/.config/config.app.php");
+
 $objRouter->get('/home',  ['App\Controllers\Routes\HomeController', 'index']);
 $objRouter->before('.*', ['App\Controllers\Middleware\TemplateMiddleware', 'init']);
 $objRouter->dispatch($objReq, $objRes, $objContainer);

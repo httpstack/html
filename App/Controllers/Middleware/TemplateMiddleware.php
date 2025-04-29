@@ -1,7 +1,7 @@
 <?php
 namespace App\Controllers\Middleware;
-use App\DOM\DomTemplate;
-use App\Template;
+use App\DOM\Template;
+
 use App\IO\FileLoader;
 class TemplateMiddleware
 {
@@ -20,7 +20,7 @@ class TemplateMiddleware
         $strViewDir = $strBasePath . $container->settings['paths']['viewPath'];
         
 
-        $template = new DOMTemplate($container->settings['paths']['baseTemplate'], true);
+        $template = new Template($container->settings['paths']['baseTemplate'], true);
         $template->addFunction("doThis", function($arg) {
             return "Hello, " . htmlspecialchars($arg);
         });
