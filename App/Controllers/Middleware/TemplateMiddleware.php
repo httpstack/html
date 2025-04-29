@@ -1,6 +1,6 @@
 <?php
 namespace App\Controllers\Middleware;
-use App\_Template;
+use App\DOM\DomTemplate;
 use App\Template;
 use App\IO\FileLoader;
 class TemplateMiddleware
@@ -20,10 +20,14 @@ class TemplateMiddleware
         $strViewDir = $strBasePath . $container->settings['paths']['viewPath'];
         
 
-        $template = new _Template($container);
-        $rendered = $template->render("/var/www/html/App/Views/Templates/template.master.html");
-        //$template->inject("view.html",$rendered)
-        $response->setBody($rendered);
+        $template = new DOMTemplate($container->settings['paths']['baseTemplate'], true);
+        $template->addFunction("doThis", function($arg) {
+            return "Hello, " . htmlspecialchars($arg);
+        });
+        $template->setData(['title' => 'My Dynamic Page']);
+        $template->setAssetsPath($strAssetDir);
+        $container->addProperty('template', $template); 
+        $container->addProperty('viewSlot', $template->getElementById("data-view"));       
 
 
         //$template->storeDoc("base", $rendered); 

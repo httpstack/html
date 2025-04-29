@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'cmcintosh/httpstack',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '231c9767b21d82872b5dd8e8a5714322dc15805b',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'cmcintosh/httpstack' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '231c9767b21d82872b5dd8e8a5714322dc15805b',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -67,7 +67,7 @@ return[
         'publicPath' => $strBasePath . 'public/',
         'templatePath' => 'App/Views/Templates/',
         'assetUri' => 'public/assets/',
-        'layout' => 'App/Views/Templates/template.layout.html'
+        'baseTemplate' => '../App/Views/Templates/template.base.html'
     ],"Template" =>[
         "assets" => [
             'css/' => [

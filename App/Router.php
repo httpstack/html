@@ -146,7 +146,7 @@ class Router {
     
         // If no route matches, return a 404 response
         $response->setStatusCode(404);
-        $response->setBody('<h1>404 Not Found</h1>');
+        //$response->setBody('<h1>404 Not Found</h1>');
         $response->send();
     }
 }

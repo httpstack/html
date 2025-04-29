@@ -5,11 +5,20 @@ namespace App\Controllers\Routes;
 class HomeController {
     public function index($request, $response, $container) {
        
-        $strTemplate = $response->getBody();
+        $template = $container->getProperty('template');
+        $viewSlot = $container->getProperty('viewSlot');
+        $view = $template->loadView("../App/Views/home.html");
+        $sourceNode = $view->getElementById("data-view");
+        $template->insertView($sourceNode, $viewSlot);
+        $template->setData([
+            'username' => 'Juniper',
+            'isLoggedIn' => true,
+            'items' => ['Apples', 'Bananas', 'Cherries'],
+            'viewKey' => 'home'
+        ]);
         
-        $strTemplate = str_replace('{{title}}', 'Home', $strTemplate);
-        $strTemplate = str_replace('{{content}}', "Homie", $strTemplate);
-        $response->setBody($strTemplate);
+        
+        $response->setBody($template->render());
         $response->send();
     }
 }

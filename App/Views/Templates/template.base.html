@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  <h1>Welcome, {{ username }}!</h1>
+
+  {{ if isLoggedIn }}
+    <p>You are logged in.</p>
+  {{ endif }}
+
+  <ul>
+    {{ foreach items as item }}
+      <li>{{ item }}</li>
+    {{ endforeach }}
+  </ul>
+  {{ doThis(data) }}
+  <div id="data-view"></div>
+</body>
+</html>
