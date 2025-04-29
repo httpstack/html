@@ -40,7 +40,7 @@ class Router {
      * @throws \Exception If the handler is invalid.
      */
 
-    protected function makeCallable($handler): callable
+    protected function makeCallable(callable|array|string $handler): callable
     {
         // If the handler is an array (e.g., [ClassName, MethodName])
         if (is_array($handler) && count($handler) === 2) {
