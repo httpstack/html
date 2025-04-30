@@ -1,53 +1,62 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #f4f4f4;
-}
+/* Base Variables */
+:root {
+    --default-font: 'Segoe UI', sans-serif;
+    --default-font-size: 14px;
+    --layout-container-width: 100%;
+    --color-primary: #007bff;
+    --color-secondary: #6c757d;
+    --color-text: #212529;
+    --color-link-text: #0d6efd;
+    --color-text-drk: #cccccc;
+  }
+  
+  /* Small devices (min-width: 576px) */
+  @media (min-width: 576px) {
+    :root {
+      --default-font-size: 15px;
+      --layout-container-width: 540px;
+    }
+  }
+  
+  /* Medium devices (min-width: 768px) */
+  @media (min-width: 768px) {
+    :root {
+      --default-font-size: 16px;
+      --layout-container-width: 720px;
+    }
+  }
+  
+  /* Large devices (min-width: 992px) */
+  @media (min-width: 992px) {
+    :root {
+      --default-font-size: 17px;
+      --layout-container-width: 960px;
+    }
+  }
+  
+  /* Extra large devices (min-width: 1200px) */
+  @media (min-width: 1200px) {
+    :root {
+      --default-font-size: 18px;
+      --layout-container-width: 1140px;
+    }
+  }
+  
+  /* Extra extra large devices (min-width: 1400px) */
+  @media (min-width: 1400px) {
+    :root {
+      --default-font-size: 19px;
+      --layout-container-width: 1320px;
+    }
+  }
 
-.container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.navbar {
-    background: #333;
-    color: #fff;
-    padding: 10px 20px;
-}
-
-.navbar ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-}
-
-.navbar li {
-    margin: 0 15px;
-}
-
-.navbar a {
-    text-decoration: none;
-    color: #fff;
-    font-weight: bold;
-}
-
-.row {
-    padding: 20px;
-    border-bottom: 1px solid #ddd;
-    text-align: center;
-}
-
-.row:last-child {
-    border-bottom: none;
-}
+  *{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+  }
+  body{
+    display:flex;
+    background-color: var(--color-primary);
+  }
+  

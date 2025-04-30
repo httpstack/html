@@ -43,7 +43,33 @@ trait DomRoutines
         $nodes = $this->xpath->query($query, $contextNode);
         return ($nodes && $nodes->length > 0) ? $nodes->item(0) : null;
     }
+    protected function bindAsset($strAssetPath){
+        $ext = pathinfo($strAssetPath, PATHINFO_EXTENSION);
+        switch($ext){
+            case "svg":
+            case "jpg":
+            case "png":
 
+            break;
+
+            case "css":
+                $newLink = $this->createElement('link');
+                $newLink->setAttribute('rel', 'stylesheet');
+                $newLink->setAttribute('href', $strAssetPath);
+                $this->_findOne('head')->appendChild($newLink);
+            break;
+
+            case "font":
+
+            break;
+
+            case "js":
+                $newScript = $this->createElement("script");
+                $newScript->setAttribute("src", $strAssetPath);
+                $this->_findOne('body')->appendChild($newScript);
+            break;
+        }
+    }
     /**
      * Create element with optional text node
      */

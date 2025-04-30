@@ -15,19 +15,56 @@ class TemplateMiddleware
     {
         // Initialize the template engine
         
-        $strBasePath = $container->settings['paths']['basePath']; 
-        $strAssetDir = $strBasePath . $container->settings['paths']['assetUri'];
-        $strViewDir = $strBasePath . $container->settings['paths']['viewPath'];
-        
+        $arrPaths = $container->settings['paths'];
+        $strAssetsPath = $arrPaths['basePath'] . $arrPaths['assetsPath'];
 
-        $template = new Template($container->settings['paths']['baseTemplate'], true);
-        $template->addFunction("doThis", function($arg) {
-            return "Hello, " . htmlspecialchars($arg);
+        $arrConfig = [
+            'uri'=>$arrPaths['assetsUri'], 
+            'assets' => $container->settings['assets'],
+            'required'=> $container->settings['required']
+        ];
+        $template = new Template($arrPaths['baseTemplate'], true);
+        $template->bindAssets($arrConfig);
+        /*
+        $template->addFunction("appendAssets", function($assetsPath) use($arrAssets) {
+            foreach($arrAssets as $asset){
+                $type = pathinfo($asset, PATHINFO_EXTENSION);
+                switch($type){
+                    case "css":
+
+                    break;
+
+                    case "js":
+
+                    break;
+
+                    case "font":
+
+                    break;
+
+                    case "svg": 
+                    case "jpg": 
+                    case "gif":
+
+                    break;
+                }
+            }
         });
+        */
         $template->setData(['title' => 'My Dynamic Page']);
-        $template->setAssetsPath($strAssetDir);
         $container->addProperty('template', $template); 
-        $container->addProperty('viewSlot', $template->getElementById("data-view"));       
+
+
+        //have a target node in your html that has an id="data-view" or whatever xpath u wish
+        //convert css selector to an xpath query
+        $xp = $template->css2xpath("#data-view");
+        //get the DOMElement
+        $viewSlot = $template->_findOne($xp);
+        
+        //alternatively you can use getElementById in this case
+        $viewSlotAlt = $template->getElementById("data-view");
+        
+        $container->addProperty('viewContainer', $viewSlot);       
 
 
         //$template->storeDoc("base", $rendered); 

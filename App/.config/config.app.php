@@ -67,26 +67,16 @@ return[
         'viewPath' => 'App/Views/',
         'publicPath' => $strBasePath . 'public/',
         'templatePath' => 'App/Views/Templates/',
-        'assetUri' => 'public/assets/',
+        'assetsPath' => 'public/assets/',
+        'assetsUri' => 'assets/',
         'baseTemplate' => '../App/Views/Templates/template.base.html'
-    ],"Template" =>[
-        "assets" => [
-            'css/' => [
-                'style.css',
-                'bootstrap.min.css'
-            ],
-            'js/' => [
-                'app.js',
-                'jquery.min.js'
-            ],
-            'img/' => [
-                'logo.png',
-                'vendor/images/logo.png'
-            ],
-            'fonts/' => [
-                'OpenSans-Regular.ttf',
-                'vendor/fonts/OpenSans-Bold.ttf'
-            ]
-            ]
+    ],
+    "assets" =>[
+                "vendor/js/jquery.js",
+                "css/style.css",
+                "js/app.js"
+    ],
+    "required" => [
+        "vendor/js/jquery.js"
     ]
 ];

@@ -47,7 +47,17 @@ class Template extends DOMDocument
     {
         return preg_match('/<.*?>.*<\/.*>/si', $document);
     }
-
+    public function bindAssets($arrConfig){
+        //load the required files first
+        extract($arrConfig);  //uri, assets, required  
+        foreach($required as $reqAsset){
+            $this->bindAsset($uri . $reqAsset);
+        }
+        foreach($assets as $asset){
+            $this->bindAsset($uri . $asset);
+        }
+        $this->initXpath();
+    }
     public function setAssetsPath(string $path): void
     {
         $this->assetsPath = rtrim($path, '/') . '/';
