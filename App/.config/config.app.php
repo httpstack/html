@@ -4,7 +4,7 @@ $strBasePath = "/";
 $strAppPath = $strBasePath . 'App/';
 $strPublicPath = $strBasePath . 'public/';
 return[
-    'name' => 'MyApp',
+    'appTitle' => 'HTTPStack',
     'version' => '1.0.0',
     'base_url' => 'http://localhost/public',
     'debug' => true,
@@ -16,18 +16,18 @@ return[
         'dbname' => 'myapp',
     ],
     'navLinks' => [
-        'home' => [
-            'label' => 'Home',
+        'Home' => [
+            'icon' => 'bi bi-house',
             'url' => '/',
             'active' => true,
         ],
-        'about' => [
-            'label' => 'About',
-            'url' => '/about',
+        'Resume' => [
+            'icon' => 'bi bi-file-earmark-text',
+            'url' => '/resume',
             'active' => false,
         ],
-        'contact' => [
-            'label' => 'Contact',
+        'Contact' => [
+            'icon' => 'bi bi-envelope',
             'url' => '/contact',
             'active' => false,
         ],
@@ -43,18 +43,15 @@ return[
         ],
     ],
     'socialLinks' => [
-        'facebook' => [
-            'label' => 'Facebook',
+        'Facebook' => [
             'url' => 'https://www.facebook.com',
             'icon' => 'fa-facebook',
         ],
-        'twitter' => [
-            'label' => 'Twitter',
+        'Twitter' => [
             'url' => 'https://www.twitter.com',
             'icon' => 'fa-twitter',
         ],
-        'instagram' => [
-            'label' => 'Instagram',
+        'Instagram' => [
             'url' => 'https://www.instagram.com',
             'icon' => 'fa-instagram',
         ],
@@ -74,6 +71,7 @@ return[
     "assets" =>[
                 "vendor/js/jquery.js",
                 "css/style.css",
+                "vendor/css/bootstrap-icons.css",
                 "js/app.js"
     ],
     "required" => [

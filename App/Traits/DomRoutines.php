@@ -34,7 +34,7 @@ trait DomRoutines
     {
         return $this->xpath->query($query, $contextNode);
     }
-
+    
     /**
      * Find the first matching element using XPath
      */

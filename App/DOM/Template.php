@@ -35,9 +35,9 @@ class Template extends DOMDocument
         $this->isBase = $isBase;
 
         if ($this->isHTML($document)) {
-            $this->loadHTML($document, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS);       
+            @$this->loadHTML($document, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS);       
         }else if(is_file($document) && file_exists($document)) {
-            $this->loadHTMLFile($document, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS);
+            @$this->loadHTMLFile($document, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS);
         } else {
             throw new Exception("Invalid document provided. Must be a valid HTML string or file path.");
         }

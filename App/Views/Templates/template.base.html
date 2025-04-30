@@ -1,23 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>{{ title }}</title>
+  <title>{{ appTitle }}</title>
 </head>
 <body>
-  <h1>Welcome, {{ username }}!</h1>
+  <div class="app-container">
+    <div class="container-header">
+      <brand>
+        <i class="bi bi-lightning-charge"></i>
+        <h3>{{ appTitle }}</h3>
+      </brand>
+    </div>
+    <div class="container-nav">
+      {{ frgNav }}
+   </div>
+    <!--The view will start here-->
+    <div id="data-view">
+    </div>
+    <!--The view will end here-->
+    <div class="container-footer">
+      <div class="footer-legal">
 
-  {{ if isLoggedIn }}
-    <p>You are logged in.</p>
-  {{ endif }}
-
-  <ul>
-    {{ foreach items as item }}
-      <li>{{ item }}</li>
-    {{ endforeach }}
-  </ul>
-
-  <h3>view starts here</h3>
-  <div id="data-view"><b>view would go here</b></div>
-  <h3>view ends here</h3>
+      </div>
+      <div class="footer-copy">
+        <p>&copy; 2023 {{ appTitle }} All rights reserved.</p>
+      </div>
+      <div class="footer-social">
+      </div>
+      
+    </div>
+  </div>
 </body>
 </html>

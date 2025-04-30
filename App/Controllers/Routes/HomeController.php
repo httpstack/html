@@ -10,6 +10,7 @@ class HomeController {
         $view = $template->loadView("../App/Views/home.html");
         $sourceNode = $view->getElementById("data-view");
         //var_dump($viewSlot);
+        //var_dump($sourceNode);
         $template->insertView($sourceNode, $viewSlot);
         $template->setData([
             'username' => 'Juniper',

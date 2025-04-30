@@ -51,7 +51,7 @@ class TemplateMiddleware
             }
         });
         */
-        $template->setData(['title' => 'My Dynamic Page']);
+        $template->setData(['appTitle' => $container->settings['appTitle']]);
         $container->addProperty('template', $template); 
 
 
@@ -64,7 +64,7 @@ class TemplateMiddleware
         //alternatively you can use getElementById in this case
         $viewSlotAlt = $template->getElementById("data-view");
         
-        $container->addProperty('viewContainer', $viewSlot);       
+        $container->addProperty('viewContainer', $viewSlotAlt);       
 
 
         //$template->storeDoc("base", $rendered); 
