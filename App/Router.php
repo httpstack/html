@@ -40,11 +40,7 @@ class Router {
      * @throws \Exception If the handler is invalid.
      */
 
-<<<<<<< HEAD
-    protected function makeCallable(callable|array|string $handler): callable
-=======
     protected function makeCallable($handler, $arrParams = []): callable
->>>>>>> a2123ed (Changed the names of the traits and the class)
     {
         // If the handler is an array (e.g., [ClassName, MethodName])
         if (is_array($handler) && count($handler) === 2) {
