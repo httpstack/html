@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace HttpStack\IO;
 
 use Framework\Exceptions\FrameworkException;
 

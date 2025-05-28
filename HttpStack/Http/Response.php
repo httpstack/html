@@ -1,6 +1,6 @@
 <?php
-namespace App\Http;
-use App\Contracts\ResponseInterface;
+namespace HttpStack\Http;
+use HttpStack\Contracts\ResponseInterface;
 
 class Response implements ResponseInterface{
     private int $statusCode;

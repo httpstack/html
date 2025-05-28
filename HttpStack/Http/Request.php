@@ -1,6 +1,6 @@
 <?php
-namespace App\Http;
-use App\Contracts\RequestInterface;
+namespace HttpStack\Http;
+use HttpStack\Contracts\RequestInterface;
 
 class Request implements RequestInterface{   
     private string $method;

@@ -1,5 +1,5 @@
 <?php
-namespace App;
+namespace HttpStack\Routing;
 class Router {
     private $routes = [];
     private $beforeMiddleware = [];

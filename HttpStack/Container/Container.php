@@ -1,6 +1,6 @@
 <?php 
-namespace App;
-use App\Contracts\ContainerInterface;
+namespace HttpStack\Container;
+use HttpStack\Contracts\ContainerInterface;
 
 class Container implements ContainerInterface {
     protected $bindings = [];
@@ -38,7 +38,7 @@ class Container implements ContainerInterface {
         $this->instances[$abstract] = null; // Mark it as a singleton
     }
 
-    public function make(string $abstract, array $params = []){
+    public function make(string $abstract, mixed ...$params): mixed {
         if (isset($this->instances[$abstract])) {
             return $this->instances[$abstract];
         }
