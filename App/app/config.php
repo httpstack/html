@@ -1,5 +1,5 @@
 <?php
-define("DOC_ROOT", "/var/www/html");
+
 $settings = [
     "appName" => "",
     "appVersion" => "",
