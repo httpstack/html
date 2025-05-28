@@ -12,7 +12,10 @@ class Response implements ResponseInterface{
         $this->headers = $headers;
         $this->body = $body;
     }
-
+    public function setContentType(string $contentType){
+        $this->headers["Content-Type"] = $contentType;
+        return $this;
+    }
     public function setStatusCode(int $code): void {
         $this->statusCode = $code;
     }

@@ -6,20 +6,12 @@ class Container implements ContainerInterface {
     protected $bindings = [];
     protected $instances = [];
     private array $props = [];
-    private Config $config;
-    public array $settings = [];
 
-    public function __construct(string $file = '') {
-        if($file){
-            $this->config = new Config();
-            $this->config->load($file);
-            $this->settings = $this->config->all();
-        }
+
+    public function __construct() {
+
     }
 
-    public function getSettings(): array {
-        return $this->settings;
-    }
 
     public function bind(string $abstract, $concrete): void {
         $this->bindings[$abstract] = $concrete;

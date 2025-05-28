@@ -4,8 +4,8 @@ RewriteEngine On
 Options -Indexes
 # Redirect root URL (e.g., http://example.com or http://example.com/) to index.php
 RewriteCond %{REQUEST_URI} ^/$
-RewriteRule ^ public/index.php [L]
+RewriteRule ^ _index.php [L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ public/index.php [L]
+RewriteRule ^ _index.php [L]
