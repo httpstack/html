@@ -13,7 +13,9 @@ if(!function_exists("box")){
 }
  function dd(mixed $data){
     $debug = app()->debug;
+
     if($debug){
+        app()->reportErrors();
         echo "<pre>";
         print_r($data);
         echo "</pre>";

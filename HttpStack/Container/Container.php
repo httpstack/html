@@ -1,5 +1,10 @@
 <?php 
 namespace HttpStack\Container;
+use Closure;
+use ReflectionClass;
+use ReflectionParameter;
+use ReflectionException;
+use HttpStack\Exceptions\AppException;
 use HttpStack\Contracts\ContainerInterface;
 
 class Container implements ContainerInterface {
@@ -46,6 +51,90 @@ class Container implements ContainerInterface {
         return $this->resolve($abstract, $params);
     }
 
+    protected function resolveDependencies(array $dependencies, array $parameters): array
+    {
+        $results = [];
+        
+        foreach ($dependencies as $dependency) {
+            // If the parameter is in the given parameters, use it
+            if (array_key_exists($dependency->name, $parameters)) {
+                $results[] = $parameters[$dependency->name];
+                continue;
+            }
+            
+            // If the parameter is a class, resolve it from the container
+            $results[] = $this->resolveClass($dependency);
+        }
+        
+        return $results;
+    }
+    protected function resolveClass(ReflectionParameter $parameter): mixed
+    {
+        $type = $parameter->getType();
+        
+        // If the parameter doesn't have a type hint or is a built-in type, 
+        // and is optional, use the default value
+        if (!$type || $type->isBuiltin()) {
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+            
+            throw new AppException(
+                "Unresolvable dependency: $parameter in class {$parameter->getDeclaringClass()->getName()}"
+            );
+        }
+        
+        try {
+            // Use the ReflectionNamedType API which works in PHP 7.4+
+            $typeName = $type instanceof \ReflectionNamedType ? $type->getName() : (string)$type;
+            return $this->make($typeName);
+        } catch (AppException $e) {
+            // If we can't resolve the class but the parameter is optional, 
+            // use the default value
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+            
+            throw $e;
+        }
+    }
+    public function call($callback, array $parameters = []): mixed
+    {
+        if (is_array($callback)) {
+            // If the first element is a string (class name), instantiate it
+            if (is_string($callback[0])) {
+                $callback[0] = $this->make($callback[0]);
+            }
+            
+            $reflectionMethod = new \ReflectionMethod($callback[0], $callback[1]);
+            $dependencies = $reflectionMethod->getParameters();
+            
+            $parameters = $this->resolveDependencies($dependencies, $parameters);
+            
+            return $reflectionMethod->invokeArgs($callback[0], $parameters);
+        }
+        
+        if ($callback instanceof Closure) {
+            $reflectionFunction = new \ReflectionFunction($callback);
+            $dependencies = $reflectionFunction->getParameters();
+            
+            $parameters = $this->resolveDependencies($dependencies, $parameters);
+            
+            return $reflectionFunction->invokeArgs($parameters);
+        }
+        
+        if (is_string($callback) && strpos($callback, '::') !== false) {
+            list($class, $method) = explode('::', $callback);
+            return $this->call([$class, $method], $parameters);
+        }
+        
+        if (is_string($callback) && method_exists($callback, '__invoke')) {
+            $instance = $this->make($callback);
+            return $this->call([$instance, '__invoke'], $parameters);
+        }
+        
+        throw new AppException("Invalid callback provided to container->call()");
+    }
     public function resolve(string $abstract, array $params = []) {
         if (!isset($this->bindings[$abstract])) {
             throw new \Exception("No binding found for {$abstract}");

@@ -11,27 +11,43 @@ class Application{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = true;
+    public bool $debug = false;
     public function __construct(string $appPath = "/var/www/html/App/app") {
         $this->router = new Router();
         $this->request = new Request();
         $this->response = new Response();
         $this->container = new Container();
         
-        //INIT WILL BIND ALL THE INSTANCES TO THE CONTAINER
+        //INIT WILL BIND ALL THE INSTANCES/SERVICES TO THE CONTAINER
         $this->init();
+
         //GET SETTINGS FOR APP
         $this->settings = $this->container->make("config")['app'];
         $GLOBALS["app"] = $this;
     }
     public function loadRoutes(){
-        $routeDefs = $this->settings['appRoot'] . $this->settings['routeDefs'];
-        
-        $routes = include($routeDefs);
-        dd($routes);
-        foreach($routes as $uri => list($handler, $method)){
-            $this->router->addRoute($method, $uri, $handler);
+        $routesDir = APP_ROOT . "/" . $this->settings['appPaths']['routesDir'];
+        $configs = [];
+        //LOOP OVER THE ROUTES DIRECTORY
+        //AND GET ROUTE ARRAYS FROM THE FILES
+        foreach (glob($routesDir . '/*.php') as $file){
+            dd($file);
+            $routes = include($file);
+            dd($routes);
+            //LOOP OVER THE ROUTE ARRAYS AND REGISTER THWE ROUTES / MIDDLEWARES
+            foreach($routes as $uri => list($handler, $method, $type)){
+                switch($type){
+                    case "route":
+                        $this->router->addRoute($method, $uri, $handler);
+                    break;
+
+                    case "mw":
+                        $this->router->addMiddleware($method,$uri,$handler);
+                    break;
+                }
+            }
         }
+        
     }
     public function getContainer(){
         return $this->container;
@@ -39,7 +55,10 @@ class Application{
     public function get(string $uri, callable $handler){
         $this->router->get($uri, $handler);
     }
-    public function setDebug(){
+    public function beforeGet($uri,$handler){
+        $this->router->beforeGet($uri, $handler);
+    }
+    public function reportErrors(){
         if($this->debug){
             ini_set("display_errors", 1);
             ini_set("display_startup_errors", 1);
@@ -72,7 +91,7 @@ class Application{
         });
     }
     public function run(){
-        $this->router->dispatch($this->request, $this->response);
+        $this->router->dispatch($this->request, $this->response, $this->container);
     }
 }
 ?>

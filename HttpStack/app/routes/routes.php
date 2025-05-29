@@ -1,7 +1,11 @@
 <?php
-use App\app\Controllers\Routes\PublicController;
+use HttpStack\app\Controllers\Routes\PublicController;
 $routes = [
-    "/about" => [[new PublicController,"about"], "GET"],
+    "/about" => [
+                    [new PublicController,"about"], 
+                    "GET", 
+                    "route"
+                ],
 ];
 return $routes;
 ?>

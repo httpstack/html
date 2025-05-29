@@ -1,5 +1,5 @@
 <?php
-namespace App\app\Controllers\Routes;
+namespace HttpStack\app\Controllers\Routes;
 
 class PublicController{
 
@@ -7,8 +7,8 @@ class PublicController{
 
     }
     public function about($req, $res){
-            $res->setContentType("text/html")->setBody("About Page");
-    $res->send();
+        $res->setContentType("text/html")->setBody("About Page");
+        $res->send();
     }
 }
 ?>

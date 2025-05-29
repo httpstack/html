@@ -1,6 +1,13 @@
 <?php
+use HttpStack\app\Controllers\Middleware\SessionController;
+$container = app()->getContainer();
+
 $routes = [
-    "/about" => [[new PublicController,"about"], "GET"],
+    ".*" => [
+                ['HttpStack\app\Controllers\Middleware\SessionController',"process"], 
+                "GET", 
+                "mw"
+            ],
 ];
 return $routes;
 ?>

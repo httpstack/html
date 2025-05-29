@@ -6,7 +6,7 @@ use HttpStack\App\Application;
 
 $app = new Application();
 
-//$app->loadRoutes();
+$app->loadRoutes();
 
 
 $app->get("/home", function($req,$res){
