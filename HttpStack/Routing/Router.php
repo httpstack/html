@@ -1,32 +1,46 @@
 <?php
 namespace HttpStack\Routing;
 class Router {
-    private $routes = [];
-    private $beforeMiddleware = [];
+    private $after = [];
+    private $before = [];
 
-    public function addRoute($method, $path, $handler){
-        $this->routes[$method][$path] = $handler;
+    public function after(Route $route){
+        $newRouteUri = $route->getUri();
+        $newRouteMethod = $route->getMethod();
+        $newRouteHandlers = $route->getHandlers();
+        //CHECK TO SEE IF THE ROUTE METHOD AND URI ARE REGISTERED
+        if(isset($this->after[$newRouteMethod]) && isset($this->after[$newRouteMethod][$newRouteUri])){
+            $oldRouteHandlers = $this->after[$newRouteMethod][$newRouteUri];
+            foreach($newRouteHandlers as $newHandler){
+                array_push($oldRouteHandlers, $newHandler);
+            }
+        }else{
+            $this->after[$newRouteMethod][$newRouteUri] = $newRouteHandlers;
+        }
     }
-    public function addMiddleware($method, $path, $handler){
-        $this->beforeMiddleware[$method][$path] = $handler;
+    public function before(Route $route){
+        $newRouteUri = $route->getUri();
+        $newRouteMethod = $route->getMethod();
+        $newRouteHandlers = $route->getHandlers();
+        //CHECK TO SEE IF THE ROUTE METHOD AND URI ARE REGISTERED
+        if(isset($this->before[$newRouteMethod]) && isset($this->before[$newRouteMethod][$newRouteUri])){
+            $oldRouteHandlers = $this->after[$newRouteMethod][$newRouteUri];
+            foreach($newRouteHandlers as $newHandler){
+                array_push($oldRouteHandlers, $newHandler);
+            }
+        }else{
+            $this->before[$newRouteMethod][$newRouteUri] = $newRouteHandlers;
+        }
     }
-    public function get($path, $handler) {
-        $this->routes['GET'][$path] = $handler;
-    }
-    public function post($path, $handler) {
-        $this->routes['POST'][$path] = $handler;
-    }
-    public function beforeGet($pattern, $middleware) {
-        $this->beforeMiddleware['GET'][$pattern] = $middleware;
-    }   
+
     public function dispatch($request, $response, $container) { 
         $method = $request->getMethod();
         $uri = $request->getUri();
-        //dd($this->beforeMiddleware);
+        //dd($this->before);
         /**
          * LOOP MIDDLEWARES
          */
-        foreach($this->beforeMiddleware[$method] as $pattern => $middleware){
+        foreach($this->before[$method] as $pattern => $handlers){
             // Convert {param} to regex
             $regex = preg_replace('/\{\w+\}/', '([^/]+)', $pattern);
             // Convert wildcard * to regex
@@ -37,35 +51,39 @@ class Router {
             }
             $matches = [];
             if (preg_match("#^$regex$#", $uri)) {
-                if(is_array($middleware)){
-                    list($className, $methodName) = $middleware;
-                    $instance = new $className();
-                    $callable = [$instance,$methodName];
-                }else{
-                    $callable = $middleware;
+                foreach($handlers as $middleware){
+                    if(is_array($middleware)){
+                        list($className, $methodName) = $middleware;
+                        $instance = new $className();
+                        $callable = [$instance,$methodName];
+                    }else{
+                        $callable = $middleware;
+                    }   
+                    call_user_func_array($callable, [$request,$response,$container,$matches]);           
                 }
-               // $container->call($mw, [$request, $response, $container, $matches]);
-                call_user_func_array($callable, [$request,$response,$container,$matches]);
             }
         }
         /**
          * LOOP WARES
          * 
          */
-        foreach($this->routes[$method] as $pattern => $ware){
+        foreach($this->after[$method] as $pattern => $handlers){
             $matches = [];
             $regex = preg_replace('/\{\w+\}/', '([^/\/]+)', $pattern);
             
             if(preg_match("#$regex#", $request->getUri(),$matches)){
-                //$container->call($this->routes[$method][$key], [$request, $response, $container, $matches]);
-                if(is_array($ware)){
-                    list($className, $methodName) = $ware;
-                    $instance = new $className();
-                    $callable = [$instance,$methodName];
-                }else{
-                    $callable = $ware;
+                foreach($handlers as $afterWare){
+                    if(is_array($afterWare)){
+                        list($className, $methodName) = $afterWare;
+                        $instance = new $className();
+                        $callable = [$instance,$methodName];
+                    }else{
+                        $callable = $afterWare;
+                    }
+                    call_user_func_array($callable, [$request,$response,$container,$matches]); 
                 }
-                call_user_func_array($callable, [$request,$response,$container,$matches]);
+                //$container->call($this->after[$method][$key], [$request, $response, $container, $matches]);
+
             }
         }
     }

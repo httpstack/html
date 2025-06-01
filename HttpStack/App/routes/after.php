@@ -1,0 +1,9 @@
+<?php
+use HttpStack\App\Controllers\Routes\PublicController;
+use HttpStack\Routing\Route;
+
+$home = new Route("GET","/home", [new PublicController(), "index"],"after");
+$resume = new Route("GET","/resume", [new PublicController(), "resume"],"after");
+$contact = new Route("GET", "/contact", [new PublicController(), "contact"], "after");
+return [$home,$resume,$contact];
+?>

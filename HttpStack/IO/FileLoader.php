@@ -2,7 +2,7 @@
 
 namespace HttpStack\IO;
 
-use Framework\Exceptions\FrameworkException;
+use HttpStack\Exceptions\AppException;
 
 /**
  * File Loader.
@@ -43,7 +43,7 @@ class FileLoader
     {
         // Ensure the directory exists
         if (!is_dir($directory)) {
-            throw new FrameworkException("Directory not found: {$directory}");
+            throw new AppException("Directory not found: {$directory}");
         }
 
         $this->mappedDirectories[$name] = rtrim($directory, '/');
@@ -70,33 +70,21 @@ class FileLoader
     /**
      * Find a file by name in mapped directories (searches subdirectories).
      */
-    public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
-    {
-        $extension = $extension ?? $this->defaultExtension;
+public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
+{
+    // Use default extension if not supplied
+    $extension = $extension ?? $this->defaultExtension;
 
-        // Add extension if not already present
-        if (!empty($extension) && !preg_match('/\.'.preg_quote($extension, '/').'$/i', $name)) {
-            $name .= '.'.$extension;
-        }
+    // Only add extension if not already present
+    if (!empty($extension) && !pathinfo($name, PATHINFO_EXTENSION)) {
+        $name .= '.' . ltrim($extension, '.');
+    }
 
-        // Look in a specific directory if provided
-        if ($directory !== null) {
-            $dir = $this->mappedDirectories[$directory] ?? $directory;
+    // If a directory is specified, search only there
+    if ($directory !== null) {
+        $dir = $this->mappedDirectories[$directory] ?? $directory;
 
-            if (is_dir($dir)) {
-                $files = $this->scanDirectoryForExtension($dir, $extension);
-                foreach ($files as $file) {
-                    if (basename($file) === $name) {
-                        return $file;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        // Look in all mapped directories
-        foreach ($this->mappedDirectories as $dir) {
+        if (is_dir($dir)) {
             $files = $this->scanDirectoryForExtension($dir, $extension);
             foreach ($files as $file) {
                 if (basename($file) === $name) {
@@ -107,6 +95,21 @@ class FileLoader
 
         return null;
     }
+
+    // If no directory specified, search all mapped directories
+    foreach ($this->mappedDirectories as $dir) {
+        if (is_dir($dir)) {
+            $files = $this->scanDirectoryForExtension($dir, $extension);
+            foreach ($files as $file) {
+                if (basename($file) === $name) {
+                    return $file;
+                }
+            }
+        }
+    }
+
+    return null;
+}
 
     /**
      * Find all files by extension in mapped directories.
@@ -166,7 +169,7 @@ class FileLoader
     /**
      * Load a file's contents.
      *
-     * @throws FrameworkException
+     * @throws AppException
      */
     public function loadFile(string $path, bool $useCache = true): string
     {
@@ -185,7 +188,7 @@ class FileLoader
             $foundPath = $this->findFile($path);
 
             if ($foundPath === null) {
-                throw new FrameworkException("File not found: {$path}");
+                throw new AppException("File not found: {$path}");
             }
 
             $path = $foundPath;
@@ -195,7 +198,7 @@ class FileLoader
         $content = include $path;
 
         if ($content === false) {
-            throw new FrameworkException("Failed to read file: {$path}");
+            throw new AppException("Failed to read file: {$path}");
         }
 
         // Cache the content
@@ -209,7 +212,7 @@ class FileLoader
     /**
      * Require a PHP file.
      *
-     * @throws FrameworkException
+     * @throws AppException
      */
     public function requireFile(string $path)
     {
@@ -223,7 +226,7 @@ class FileLoader
             $foundPath = $this->findFile($path);
 
             if ($foundPath === null) {
-                throw new FrameworkException("File not found: {$path}");
+                throw new AppException("File not found: {$path}");
             }
 
             $path = $foundPath;
@@ -238,18 +241,18 @@ class FileLoader
             $data = json_decode($content, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new FrameworkException("Failed to parse JSON file: {$path}");
+                throw new AppException("Failed to parse JSON file: {$path}");
             }
 
             return $data;
         } else {
-            throw new FrameworkException("File not found: {$path}");
+            throw new AppException("File not found: {$path}");
         }
     }
     /**
      * Include a PHP file.
      *
-     * @throws FrameworkException
+     * @throws AppException
      */
     public function includeFile(string $path)
     {
@@ -263,7 +266,7 @@ class FileLoader
             $foundPath = $this->findFile($path);
 
             if ($foundPath === null) {
-                throw new FrameworkException("File not found: {$path}");
+                throw new AppException("File not found: {$path}");
             }
 
             $path = $foundPath;
