@@ -2,6 +2,18 @@
 namespace HttpStack\Traits;
 use HttpStack\DataBase\DBConnect;
 trait DBModel{
+    protected array $queries = [];
+
+    public function addQuery(string $queryName, string $sql, array $params = []):self{
+        $this->queries[$queryName] = [$sql,$params];
+        return $this;
+    }
+    public function runQuery(string $queryName, $modelKey=$queryName){
+        list($sql,$params) = $this->queries[$queryName];
+        $stmt = $this->dbConnect->prepare($sql);
+        $stmt->execute($params);
+        $this->model[$modelKey] = $stmt->fetchAll();
+    }
     public function setDB(DBConnect $dbConnect){
         $this->dbConnect = $dbConnect;
     }

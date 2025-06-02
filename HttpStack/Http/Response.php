@@ -6,7 +6,7 @@ class Response implements ResponseInterface{
     private int $statusCode;
     private array $headers;
     private string $body;
-
+    public bool $sent = false;
     public function __construct(int $statusCode = 200, array $headers = [], string $body = "") {
         $this->statusCode = $statusCode;
         $this->headers = $headers;
@@ -41,10 +41,12 @@ class Response implements ResponseInterface{
     }
 
     public function send(): void {
+        
         http_response_code($this->statusCode);
         foreach ($this->headers as $name => $value) {
             header("$name: $value");
         }
+        $this->sent = true;
         echo $this->body;
     }
 }

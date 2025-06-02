@@ -1,10 +1,13 @@
 <?php
 namespace HttpStack\App;
+use HttpStack\App\Models\TemplateModel;
 use HttpStack\Container\Container;
+use HttpStack\DataBase\DBConnect;
 use HttpStack\DocEngine\DocEngine;
 use HttpStack\Routing\Router;
 use HttpStack\Http\{Request,Response};
 use HttpStack\IO\FileLoader;
+use HttpStack\IO\Sources\FileDatasource;
 use HttpStack\Routing\Route;
 class App{
     protected Container $container;
@@ -32,7 +35,7 @@ class App{
         $this->router->after($route);
     }
     public function loadRoutes(){
-        $routesDir = APP_ROOT . "/" . $this->settings['appPaths']['routesDir'];
+        $routesDir = $this->settings['appPaths']['routesDir'];
         $configs = [];
         //LOOP OVER THE ROUTES DIRECTORY
         //AND GET ROUTE ARRAYS FROM THE FILES
@@ -74,6 +77,9 @@ class App{
         $this->container->singleton(Container::class, $this->container);
         $this->container->singleton("app", $this);
         $this->container->singleton(self::class, $this);
+        $this->container->singleton("dbConnect", function(){
+            return new DBConnect();
+        });
         $this->container->singleton("router", $this->router);
         $this->container->singleton("request", $this->request);
         $this->container->singleton("response", $this->response);
@@ -94,15 +100,25 @@ class App{
             }
             return $configs;
         });
-        $this->container->singleton("templateInit", function(){
+        $this->container->singleton("template", function(){
+            $baseTemplate = "base.html";
             $title = $this->getSettings()['appName'];
-            $templatesDir = APP_ROOT . $this->getSettings()['appPaths']['templatesDir'];
-            $viewsDir = APP_ROOT . $this->getSettings()['appPaths']['viewsDir'];
+            $templates = $this->getSettings()['appPaths']['templatesDir'];
+            $views = $this->getSettings()['appPaths']['viewsDir'];
+            $assets = DOC_ROOT . "/public/assets";
+            $vendorAssets = DOC_ROOT . "/public/assets/vendor";
             $document = new DocEngine(null, $title);
-            $document->addSourcePath("templates",$templatesDir);
-            $document->addSourcePath("views",$viewsDir); 
-            $document->docFromFile("base");
+            $document->addSourcePath("templates",$templates);
+            $document->addSourcePath("views",$views); 
+            $document->docFromFile($baseTemplate);
             return $document;
+        });
+    
+        $this->container->singleton("template.model", function(){
+            $dataDirectory = appPath("dataDir") . "/template";
+            $dataSource = new FileDatasource($dataDirectory);
+            $tm = new TemplateModel($dataSource);
+            return $tm;
         });
     }
     public function run(){

@@ -59,6 +59,7 @@ class Router {
                     }else{
                         $callable = $middleware;
                     }   
+                    dd($className);
                     call_user_func_array($callable, [$request,$response,$container,$matches]);           
                 }
             }

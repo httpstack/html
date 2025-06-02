@@ -8,13 +8,13 @@ $settings = [
     "appRoot" => APP_ROOT,
     "uriRoot" => "/",
     "appPaths" => [
-        "configDir" => "/config",
-        "dataDir" => "/data",
-        "viewsDir" => "/Views/routes",
-        "templatesDir" => "/Views/templates",
-        
-        "assetsDir" => "/assets",
-        "routesDir" => "/routes"
+        "configDir" => APP_ROOT . "/config",
+        "dataDir" => APP_ROOT . "/data",
+        "viewsDir" => APP_ROOT . "/Views/routes",
+        "templatesDir" => APP_ROOT . "/Views/templates",
+        "vendorAssetsDir" => DOC_ROOT . "/public/assets/vendor",
+        "assetsDir" => DOC_ROOT . "/public/assets",
+        "routesDir" => APP_ROOT . "/routes"
     ],
     "routeDefs" => "/routes/public.php",
 ];

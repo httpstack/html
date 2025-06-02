@@ -18,11 +18,19 @@ if(!function_exists("box")){
         app()->getContainer();
     }
 }
+if(!function_exists("appPath")){
+    function appPath(string|null $path):string|array{
+        if($path){
+           return app()->getSettings()["appPaths"][$path];
+        }
+        return app()->getSettings()["appPaths"];
+    }
+}
  function dd(mixed $data){
     $debug = app()->debug;
 
     if($debug){
-        app()->reportErrors();
+        
         echo "<pre>";
         print_r($data);
         echo "</pre>";
