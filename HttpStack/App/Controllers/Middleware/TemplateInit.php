@@ -16,12 +16,14 @@ class TemplateInit{
     }
     public function process($req,$res,$container){
         $model = $container->make("template.model");
-        $base = $model->get("base");
+        //$base = $model->get("base");
+        /*
         $base['appName'] = "yadda";
         $model->set("base", $base);
         $model->save();
        // dd($res);
        echo "processing";
+       */
         $res->setHeader("Content-Type", "text/html");
         $res->setHeader("Middleware", "Session Started");
         

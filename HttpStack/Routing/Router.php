@@ -54,12 +54,12 @@ class Router {
                 foreach($handlers as $middleware){
                     if(is_array($middleware)){
                         list($className, $methodName) = $middleware;
-                        $instance = new $className();
-                        $callable = [$instance,$methodName];
+                        //$instance = new $className();
+                        $callable = [$className,$methodName];
                     }else{
                         $callable = $middleware;
                     }   
-                    dd($className);
+                    //dd($className);
                     call_user_func_array($callable, [$request,$response,$container,$matches]);           
                 }
             }
