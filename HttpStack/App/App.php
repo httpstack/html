@@ -103,8 +103,14 @@ class App{
         });
         $this->container->singleton("template", function(){
             $template = new Template();
-            $template->readFile("base", "base");
+            $html = $template->readFile("base", "base");
+
             //normalize the document so it has doctype html head title body tags proper nested
+            $html = $template->normalizeHtml($html);
+            //set the cached version to the normalized one
+            $template->setCachedFile("base", $html);
+            $model = $this->container->make("template.model");
+            $template->setVar($model->getModel()['base']);
             // get a data model for the template , model will be ro with 3 array
             //the template will request the model->base from data model and load it's data array with it
             //template mostly built we just got a

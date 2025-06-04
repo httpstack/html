@@ -15,6 +15,7 @@ use HttpStack\IO\FileLoader;
 
  class Template{
     protected array $fileCache = [];
+    protected array $vars = [];
     protected FileLoader $fileLoader;
     public string $defaultFileExt = "html";
     protected DOMXPath $liveDocument;
@@ -28,14 +29,24 @@ use HttpStack\IO\FileLoader;
         return $this->fileCache[$nameSpace];
         //dd($this->fileCache);
     }
-    public function getCachedFile(string $nameSpace):string{
-        return $this->fileCache[$nameSpace];
+
+    public function getCachedFile(string $nameSpace):string|array{
+        return $nameSpace ? $this->fileCache[$nameSpace] : $this->fileCache;
+    }
+    public function setCachedFile(string $nameSpace, string $html) {
+        $this->fileCache[$nameSpace] = $html;
     }
     public function loadLiveDoc(string $nameSpace){
         $binOptions = LIBXML_HTML_NODEFDTD|LIBXML_NOERROR|LIBXML_NOWARNING;
         $this->dom = new DOMDocument("1.0","utf-8");
         $this->dom->loadHTML($this->fileCache[$nameSpace], $binOptions);
         $this->liveDocument = new DOMXPath($this->dom);
+    }
+    public function setVar(string|array $key, string $value = ''){
+        (is_array($key)) ? array_merge($this->vars, $key): $this->vars[$key] = $value;
+    }
+    public function methody(mixed $var):mixed{
+        
     }
     public function normalizeHtml(string $html): string
     {
