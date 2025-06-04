@@ -104,7 +104,18 @@ class App{
         $this->container->singleton("template", function(){
             $template = new Template();
             $template->readFile("base", "base");
-            
+            //normalize the document so it has doctype html head title body tags proper nested
+            // get a data model for the template , model will be ro with 3 array
+            //the template will request the model->base from data model and load it's data array with it
+            //template mostly built we just got a
+            // set title
+            // set meta
+            // get the resource array from model and 
+            // load the resources from file array to build links and scripts and app and append them
+            // get the other links array from model
+            // use some Dom helpers to turn the links arrays into their respective navbars main,social,footer
+            // add keys with value for navMain navSocial and navFooter to the templates datarray
+            // replace the data with certain criteria on my expressions or data- attrbutes
             return $template;
         });
     
