@@ -137,7 +137,7 @@ class Container implements ContainerInterface {
     }
     public function resolve(string $abstract, array $params = []) {
         if (!isset($this->bindings[$abstract])) {
-            throw new \Exception("No binding found for {$abstract}");
+            throw new AppException("No binding found for {$abstract}");
         }
 
         $concrete = $this->bindings[$abstract];
@@ -154,10 +154,10 @@ class Container implements ContainerInterface {
     }
 
     public function build(string $concrete, array $params = []) {
-        $reflector = new \ReflectionClass($concrete);
+        $reflector = new ReflectionClass($concrete);
 
         if (!$reflector->isInstantiable()) {
-            throw new \Exception("Cannot instantiate {$concrete}");
+            throw new AppException("Cannot instantiate {$concrete}");
         }
 
         $constructor = $reflector->getConstructor();
@@ -191,7 +191,7 @@ class Container implements ContainerInterface {
 
             // Ensure the method exists
             if (!method_exists($instance, $method)) {
-                throw new \Exception("Method '{$method}' does not exist in class '{$class}'");
+                throw new AppException("Method '{$method}' does not exist in class '{$class}'");
             }
 
             // Return a callable
@@ -205,7 +205,7 @@ class Container implements ContainerInterface {
             return $handler;
         }
 
-        throw new \Exception('Invalid handler provided');
+        throw new AppException('Invalid handler provided');
     }
 }
 ?>

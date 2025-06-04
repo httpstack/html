@@ -91,6 +91,8 @@ class FileDatasource implements DatasourceInterface {
         if ($this->readOnly) {
             return;
         }
+        echo " <br/>datasource, gonna start write <br/>";
+        
         if ($this->isDir) {
             // Save each key as a file
             foreach ($data as $filename => $content) {
@@ -103,5 +105,7 @@ class FileDatasource implements DatasourceInterface {
             // Save all data to the single file
             file_put_contents($this->path, json_encode($data, JSON_PRETTY_PRINT));
         }
+        /*
+        */
     }
 }

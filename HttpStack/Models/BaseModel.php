@@ -22,14 +22,9 @@ class BaseModel{
         $this->set($data, null);
     }
     protected function save():void{   
-        die("here"); 
-        try{
             $this->store();
+            echo "<br/>basemodel,escalating to datasource <br/>";
             $this->dataSource->save($this->model);
-        }catch(\Throwable $e){
-            echo "Error: " . $e->getMessage();
-            exit;
-        } 
     }
     public function reStore():array{
         $this->model = $this->_model;

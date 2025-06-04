@@ -1,10 +1,12 @@
 <?php
-namespace HttpStack\app\Controllers\Routes;
+namespace HttpStack\App\Controllers\Routes;
 
 class PublicController{
 
     public function index($req,$res,$container,$matches){
-        $res->setContentType("text/html")->setBody("Home Page");
+        $html = $res->getBody();
+        
+        $res->setBody($html);
         if(!$res->sent){
             $res->send();
         }

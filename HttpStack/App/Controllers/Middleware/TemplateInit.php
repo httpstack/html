@@ -16,16 +16,14 @@ class TemplateInit{
     }
     public function process($req,$res,$container){
         $model = $container->make("template.model");
-        //$base = $model->get("base");
         /*
-        $base['appName'] = "yadda";
+        $base['appName'] = "HTtpstACK";
         $model->set("base", $base);
         $model->save();
-       // dd($res);
-       echo "processing";
        */
+        dd($model);
         $res->setHeader("Content-Type", "text/html");
-        $res->setHeader("Middleware", "Session Started");
+        $res->setHeader("Middleware", "Template Loaded");
         
         $res->setBody($this->template->docToHTML());
     }

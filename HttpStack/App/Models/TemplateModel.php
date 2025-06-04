@@ -15,7 +15,8 @@ class TemplateModel extends BaseModel{
     }
 
     public function save():void{
-        $this->save();
+        echo "templatemodel,escalating to base";
+        parent::save();
     }
     public function getModel():array{
         return $this->model;

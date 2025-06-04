@@ -33,72 +33,72 @@ class DocEngine extends DOMDocument
         libxml_clear_errors();
         @$this->xpath = new DOMXPath($this);
     }
-public function startDocument(string $html, string $title = 'Document'): string
-{
-    // Ensure doctype and <html> tags
-    if (stripos($html, '<!doctype') === false) {
-        $html = "<!DOCTYPE html>\n" . $html;
-    }
-    if (stripos($html, '<html') === false) {
-        $html = "<html>\n" . $html;
-    }
-    if (stripos($html, '</html>') === false) {
-        $html .= "\n</html>";
-    }
-
-    // Load into DOM to manipulate structure
-    $dom = new DOMDocument('1.0', 'UTF-8');
-    libxml_use_internal_errors(true);
-    $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-    // Ensure <head>
-    $head = $dom->getElementsByTagName('head')->item(0);
-    if (!$head) {
-        $head = $dom->createElement('head');
-        $dom->documentElement->insertBefore($head, $dom->documentElement->firstChild);
-    }
-
-    // Ensure <title>
-    $titleTag = null;
-    foreach ($head->getElementsByTagName('title') as $t) {
-        $titleTag = $t;
-        break;
-    }
-    if (!$titleTag) {
-        $titleTag = $dom->createElement('title', htmlspecialchars($title));
-        $head->appendChild($titleTag);
-    } else {
-        $titleTag->textContent = htmlspecialchars($title);
-    }
-
-    // Ensure <body>
-    $body = $dom->getElementsByTagName('body')->item(0);
-    if (!$body) {
-        $body = $dom->createElement('body');
-        $dom->documentElement->appendChild($body);
-    }
-
-    // Move stray nodes into <body>
-    $htmlNode = $dom->documentElement;
-    $toMove = [];
-    foreach (iterator_to_array($htmlNode->childNodes) as $node) {
-        if (
-            $node->nodeType === XML_ELEMENT_NODE &&
-            !in_array($node->nodeName, ['head', 'body'])
-        ) {
-            $toMove[] = $node;
+    public function startDocument(string $html, string $title = 'Document'): string
+    {
+        // Ensure doctype and <html> tags
+        if (stripos($html, '<!doctype') === false) {
+            $html = "<!DOCTYPE html>\n" . $html;
         }
-        if ($node->nodeType === XML_TEXT_NODE && trim($node->nodeValue) !== '') {
-            $toMove[] = $node;
+        if (stripos($html, '<html') === false) {
+            $html = "<html>\n" . $html;
         }
-    }
-    foreach ($toMove as $node) {
-        $body->appendChild($node);
-    }
+        if (stripos($html, '</html>') === false) {
+            $html .= "\n</html>";
+        }
 
-    libxml_clear_errors();
-    return $dom->saveHTML();
-}
+        // Load into DOM to manipulate structure
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        // Ensure <head>
+        $head = $dom->getElementsByTagName('head')->item(0);
+        if (!$head) {
+            $head = $dom->createElement('head');
+            $dom->documentElement->insertBefore($head, $dom->documentElement->firstChild);
+        }
+
+        // Ensure <title>
+        $titleTag = null;
+        foreach ($head->getElementsByTagName('title') as $t) {
+            $titleTag = $t;
+            break;
+        }
+        if (!$titleTag) {
+            $titleTag = $dom->createElement('title', htmlspecialchars($title));
+            $head->appendChild($titleTag);
+        } else {
+            $titleTag->textContent = htmlspecialchars($title);
+        }
+
+        // Ensure <body>
+        $body = $dom->getElementsByTagName('body')->item(0);
+        if (!$body) {
+            $body = $dom->createElement('body');
+            $dom->documentElement->appendChild($body);
+        }
+
+        // Move stray nodes into <body>
+        $htmlNode = $dom->documentElement;
+        $toMove = [];
+        foreach (iterator_to_array($htmlNode->childNodes) as $node) {
+            if (
+                $node->nodeType === XML_ELEMENT_NODE &&
+                !in_array($node->nodeName, ['head', 'body'])
+            ) {
+                $toMove[] = $node;
+            }
+            if ($node->nodeType === XML_TEXT_NODE && trim($node->nodeValue) !== '') {
+                $toMove[] = $node;
+            }
+        }
+        foreach ($toMove as $node) {
+            $body->appendChild($node);
+        }
+
+        libxml_clear_errors();
+        return $dom->saveHTML();
+    }
     /**
      * Abstraction of FileLoader::mapDirectory
      * 
