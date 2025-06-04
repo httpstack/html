@@ -1,5 +1,6 @@
 <?php
 namespace HttpStack\App;
+use HttpStack\Template\Template;
 use HttpStack\App\Models\TemplateModel;
 use HttpStack\Container\Container;
 use HttpStack\DataBase\DBConnect;
@@ -101,17 +102,10 @@ class App{
             return $configs;
         });
         $this->container->singleton("template", function(){
-            $baseTemplate = "base.html";
-            $title = $this->getSettings()['appName'];
-            $templates = $this->getSettings()['appPaths']['templatesDir'];
-            $views = $this->getSettings()['appPaths']['viewsDir'];
-            $assets = DOC_ROOT . "/public/assets";
-            $vendorAssets = DOC_ROOT . "/public/assets/vendor";
-            $document = new DocEngine(null, $title);
-            $document->addSourcePath("templates",$templates);
-            $document->addSourcePath("views",$views); 
-            $document->docFromFile($baseTemplate);
-            return $document;
+            $template = new Template();
+            $template->readFile("base", "base");
+            
+            return $template;
         });
     
         $this->container->singleton("template.model", function(){

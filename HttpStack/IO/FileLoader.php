@@ -299,7 +299,10 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
 
         return false;
     }
-
+    public function readFile(string $baseName){
+        $path = $this->findFile($baseName, null, "html");
+        return file_get_contents($path);
+    }
     /**
      * Set the default file extension.
      *

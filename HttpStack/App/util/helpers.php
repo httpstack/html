@@ -6,6 +6,11 @@ if(!function_exists("app")){
         }
     }
 }
+if(!function_exists(function: "consoleLog")){
+    function consoleLog(string $text):void{
+        //echo "<script> console.log(\'$text\');</script>";
+    }
+}
 if(!function_exists("box")){
     function box(string $make=null, array $params = []){
         // if u pass an abstract to box("myTool") it will return the resolved data
