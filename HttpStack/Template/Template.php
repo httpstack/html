@@ -1,8 +1,12 @@
 <?php 
 namespace HttpStack\Template;
 
+use Dom\XPath;
 use DOMDocument;
+use DOMNode;
+use DOMNodeList;
 use DOMXPath;
+use DOMElement;
 use HttpStack\IO\FileLoader;
 
 /**
@@ -14,40 +18,82 @@ use HttpStack\IO\FileLoader;
  */
 
  class Template{
-    protected array $fileCache = [];
+    protected array $files = [];
     protected array $vars = [];
     protected FileLoader $fileLoader;
     public string $defaultFileExt = "html";
-    protected DOMXPath $liveDocument;
+    protected DOMXPath $XPath;
     protected DOMDocument $dom;
     public function __construct(){
         $this->fileLoader = box("fileLoader");
     }
-    public function readFile(string $nameSpace, string $baseFileName){
-        //read a file contents into the $fileCache at $nameSpace => $html
-        $this->fileCache[$nameSpace] = $this->fileLoader->readFile($baseFileName);
-        return $this->fileCache[$nameSpace];
-        //dd($this->fileCache);
+    public function loadFile(string $nameSpace, string $baseFileName){
+        //read a file contents into the $files at $nameSpace => $html
+        $this->files[$nameSpace] = $this->fileLoader->readFile($baseFileName);
+        return $this->files[$nameSpace];
+        //dd($this->files);
     }
 
-    public function getCachedFile(string $nameSpace):string|array{
-        return $nameSpace ? $this->fileCache[$nameSpace] : $this->fileCache;
+    public function getFile(string $nameSpace):string|array{
+        return $nameSpace ? $this->files[$nameSpace] : $this->files;
     }
-    public function setCachedFile(string $nameSpace, string $html) {
-        $this->fileCache[$nameSpace] = $html;
+    public function setFile(string $nameSpace, string $html):self {
+        $this->files[$nameSpace] = $html;
+        return $this;
     }
-    public function loadLiveDoc(string $nameSpace){
+    public function setTemplate(string $nameSpace):self{
         $binOptions = LIBXML_HTML_NODEFDTD|LIBXML_NOERROR|LIBXML_NOWARNING;
         $this->dom = new DOMDocument("1.0","utf-8");
-        $this->dom->loadHTML($this->fileCache[$nameSpace], $binOptions);
-        $this->liveDocument = new DOMXPath($this->dom);
+        $this->dom->loadHTML($this->files[$nameSpace], $binOptions);
+        $this->setXPath($this->dom);
+        return $this;
     }
-    public function setVar(string|array $key, string $value = ''){
-        (is_array($key)) ? array_merge($this->vars, $key): $this->vars[$key] = $value;
-    }
-    public function methody(mixed $var):mixed{
+    public function makeAsset(string $file):DOMElement{
+        $ext = pathinfo($file, PATHINFO_EXTENSION);
+        $baseName = pathinfo($file, PATHINFO_BASENAME);
+        $filePath = $this->fileLoader->findFile($baseName, null, $ext);
         
+        switch($ext){
+            case "js":
+                $element = $this->dom->createElement("script");
+                $element->setAttribute("type", "text/javascript");
+                $element->setAttribute("src", $filePath);
+            break;
+
+            case "css":
+                $element = $this->dom->createElement("link");
+                $element->setAttribute("type", "text/css");
+                $element->setAttribute("href", $filePath);
+            break;
+        }
+        return $element;
     }
+    public function makeResources(array $fileList):array{
+        $assets = [];
+            foreach($fileList as $file){
+                $assets[$file] = $this->makeAsset($file);
+            }
+    }
+    public function getDom():DOMDocument{
+        return $this->dom;
+    }
+    protected function setXPath(DOMDocument $dom = null):self{
+        ($dom) ? 
+            $this->XPath = new DOMXPath($dom) :
+                $this->XPath = new DOMXPath(new DOMDocument());
+        return $this;   
+    }
+    public function getXPath():DOMXPath{
+        return $this->XPath;
+    }
+    public function setVar(string|array $key, string $value = ''):self{
+        (is_array($key)) ? $this->vars = array_merge($this->vars, $key): $this->vars[$key] = $value;
+        return $this;
+    }
+    public function getVar(string $key = ''): mixed {
+        return $key === '' ? $this->vars : ($this->vars[$key] ?? null);
+    }
+
     public function normalizeHtml(string $html): string
     {
         // Ensure doctype and <html> tags
