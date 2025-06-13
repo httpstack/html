@@ -8,7 +8,7 @@ use HttpStack\DocEngine\DocEngine;
 use HttpStack\Routing\Router;
 use HttpStack\Http\{Request,Response};
 use HttpStack\IO\FileLoader;
-use HttpStack\IO\Sources\FileDatasource;
+use HttpStack\Datasource\FileDatasource;
 use HttpStack\Routing\Route;
 class App{
     protected Container $container;
@@ -103,12 +103,29 @@ class App{
         });
         $this->container->singleton("template", function(){
             $template = new Template();
-            $html = $template->readFile("base", "base");
+            $html = $template->loadFile("base", "base");
 
             //normalize the document so it has doctype html head title body tags proper nested
             $html = $template->normalizeHtml($html);
             //set the cached version to the normalized one
-            $template->setCachedFile("base", $html);
+            $template->setFile("base", $html);
+            
+            /**
+             * $model is getting a datamodel that is sourced by a directory of json files
+             * the model will be used to get the base data for the template
+             * the model will be used to get the resources array for the template
+             * the model will be used to get the links array for the template
+             * 
+             * DataModels have a simple $model array with key => value
+             * and are a reflection of an ACTUAL datasource.
+             * The getter and setter or get() and set() , dont wanna confuse
+             * these methods work on the virtual representation of the data
+             * and not the actual data source. You can set your DS (datasource)
+             * to be read/write or read only top prevent accidents.
+             * when you fetch() or save() these methods will dispatch the 
+             * datasource and refresh the model with a current snapshot of that source 
+             * fetch and save are usually called by the 
+             */
             $model = $this->container->make("template.model");
             $template->setVar($model->getModel()['base']);
             // get a data model for the template , model will be ro with 3 array

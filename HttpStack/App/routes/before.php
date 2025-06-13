@@ -4,6 +4,6 @@ use HttpStack\App\Controllers\Middleware\SessionController;
 use HttpStack\App\Controllers\Middleware\TemplateInit;
 
 $global = new Route("GET",".*",[new SessionController,'process'], "before");
-$global->addHandler([new TemplateInit(), 'process']);
+//$global->addHandler([new TemplateInit(), 'process']);
 return [$global];
 ?>

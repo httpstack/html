@@ -1,5 +1,5 @@
 <?php
-namespace HttpStack\IO\Sources;
+namespace HttpStack\Datasource;
 use HttpStack\Contracts\DatasourceInterface;
 use HttpStack\IO\FileLoader;
 
@@ -44,7 +44,25 @@ class FileDatasource implements DatasourceInterface {
     public function isReadOnly(): bool {
         return $this->readOnly;
     }
-
+    public function delete(mixed $var): void {
+        if ($this->readOnly) {
+            return;
+        }
+        if ($this->isDir) {
+            // Directory mode
+            $file = "{$this->path}/{$var}.json";
+            if (is_file($file)) {
+                unlink($file);
+            }
+        } else {
+            // Single file mode
+            if (is_file($this->path)) {
+                $data = json_decode(file_get_contents($this->path), true) ?? [];
+                unset($data[$var]);
+                file_put_contents($this->path, json_encode($data, JSON_PRETTY_PRINT));
+            }
+        }
+    }
     public function fetch(string|array|null $key): array {
         if ($this->isDir) {
             // Directory mode
