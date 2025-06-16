@@ -76,6 +76,9 @@ body {
   display:flex;
   background-color: var(--color-primary);
   font-size: 1rem;
+    font-family: sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 .app-container {
@@ -84,4 +87,50 @@ body {
   padding: 1rem;
   border-left:1px solid #cccccc;
   border-right:1px solid #cccccc;
+}
+
+
+header {
+  background-color: #f0f0f0;
+  padding: 20px;
+  text-align: center;
+}
+
+nav {
+  background-color: #e0e0e0;
+  padding: 10px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+nav li {
+  display: inline;
+  margin: 0 10px;
+}
+
+main {
+  padding: 20px;
+}
+
+.project-card {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+footer {
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+.social-links a {
+    margin: 0 10px;
 }

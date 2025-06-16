@@ -12,7 +12,7 @@ class DBConnect extends PDO
         string $dsn = 'mysql:host=localhost;dbname=cmcintosh;charset=utf8mb4',
         string $user = 'http_user',
         string $pass = 'bf6912'
-    ) {
+    ) { 
         try {
             parent::__construct($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -23,5 +23,4 @@ class DBConnect extends PDO
             throw new \RuntimeException('DB Connection failed: ' . $e->getMessage());
         }
     }
-
 }

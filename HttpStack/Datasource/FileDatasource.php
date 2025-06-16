@@ -1,5 +1,6 @@
 <?php
 namespace HttpStack\Datasource;
+use HttpStack\Abstract\AbstractDatasource;
 use HttpStack\Contracts\DatasourceInterface;
 use HttpStack\IO\FileLoader;
 
@@ -23,27 +24,19 @@ use HttpStack\IO\FileLoader;
  *   save($data): bool
  *     - Saves data to the appropriate file(s), unless read-only.
  */
-class FileDatasource implements DatasourceInterface {
+class FileDatasource extends AbstarctDatasource {
     protected FileLoader $fileLoader;
-    protected bool $readOnly = false;
+    
     protected string $path;
     protected bool $isDir;
 
-    public function __construct(string $dataPath, bool $readOnly = false){
+    public function __construct(string $dataPath, bool $readOnly = true){
         $this->fileLoader = box("fileLoader");
         $this->fileLoader->mapDirectory("datasource", is_dir($dataPath) ? $dataPath : dirname($dataPath));
-        $this->readOnly = $readOnly;
         $this->path = $dataPath;
         $this->isDir = is_dir($dataPath);
     }
 
-    public function setReadOnly(bool $readOnly): void {
-        $this->readOnly = $readOnly;
-    }
-
-    public function isReadOnly(): bool {
-        return $this->readOnly;
-    }
     public function delete(mixed $var): void {
         if ($this->readOnly) {
             return;

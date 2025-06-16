@@ -9,19 +9,8 @@ class TemplateModel extends BaseModel{
     //protected DBConnect $dbConnect;
 
     public function __construct(DatasourceInterface $jsonDatasource){
-        parent::__construct($jsonDatasource);
-        
-        //$this->dbConnect = app()->getContainer()->make("dbConnect");
+    parent::__construct($jsonDatasource);
     }
-
-    public function save():void{
-        echo "templatemodel,escalating to base";
-        parent::save();
-    }
-    public function getModel():array{
-        return $this->model;
-    }
-
 }
 
 ?>

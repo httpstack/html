@@ -65,8 +65,6 @@ class App{
     public function getContainer(){
         return $this->container;
     }
-
-
     public function reportErrors(){
         if($this->debug){
             ini_set("display_errors", 1);
@@ -121,10 +119,10 @@ class App{
              * The getter and setter or get() and set() , dont wanna confuse
              * these methods work on the virtual representation of the data
              * and not the actual data source. You can set your DS (datasource)
-             * to be read/write or read only top prevent accidents.
+             * to be read/write or read only to prevent accidents.
              * when you fetch() or save() these methods will dispatch the 
              * datasource and refresh the model with a current snapshot of that source 
-             * fetch and save are usually called by the 
+             * or save the model to the source.
              */
             $model = $this->container->make("template.model");
             $template->setVar($model->getModel()['base']);
@@ -141,8 +139,16 @@ class App{
             // replace the data with certain criteria on my expressions or data- attrbutes
             return $template;
         });
-    
+        $this->container->singleton("docEngine", function(){
+            return new DocEngine();
+        });
+        $this->container->singleton("dbModel", function(){
+            $dbConnect = $this->container->make("dbConnect");
+            $dbDS = new DBDatasource($dbConnect, "assets",);
+            return $dbModel;
+        });
         $this->container->singleton("template.model", function(){
+
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new FileDatasource($dataDirectory);
             $tm = new TemplateModel($dataSource);
