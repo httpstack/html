@@ -2,13 +2,26 @@
 namespace Dev\Model\Abstracts;
 
 use Dev\Model\Contracts\ModelInterface;
+use Dev\Contracts\CrudInterface;
+
 abstract class AbstractModel implements ModelInterface{
     protected $properties = [];
     protected $_properties = [];
+    protected $testVar = "test";
+    /**
+     * AbstractModel constructor.
+     * Initializes the model with an empty properties array.
+     */
 
-    public function __construct(array $properties = []){
-        $this->properties = $properties;
-        $this->_properties = $properties;
+    public function __construct(protected CrudInterface $datasource){
+        if(is_null($datasource)) {
+            throw new \InvalidArgumentException("Datasource cannot be null");
+        }
+        ($datasource)?
+            $this->setAll($datasource->read()):
+            $this->setAll([]);
+        $this->datasource = $datasource;
+        $this->setAll($datasource->read());
     }
 
     public function get(array|string $properties = []): array {
@@ -47,7 +60,9 @@ abstract class AbstractModel implements ModelInterface{
         $this->_properties = [];
     }
 
-    abstract public function create(): array;
+
+    
+    
 
 
 }
