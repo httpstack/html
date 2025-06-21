@@ -24,7 +24,8 @@ class ModelJsonDir extends AbstractModel implements CrudInterface{
         return ['status' => 'success', 'data' => $params];
     }
 
-    public function read(string $endpoint, array $data): array {
+    public function read(): void {
+        $this->setAll($this->datasource->read());
         // Simulate a read operation
         return ['status' => 'success', 'data' => $this->getAll()];
     }
@@ -40,5 +41,6 @@ class ModelJsonDir extends AbstractModel implements CrudInterface{
         $this->clear();
         return ['status' => 'success'];
     }
+    
 }
 ?>

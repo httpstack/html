@@ -1,7 +1,8 @@
 <?php 
 namespace Dev\IO\FileSystem\Collections;
+use Dev\Contracts\CrudInterface;
 
-class JsonDir implements \Dev\IO\FileSystem\Contracts\CrudInterface {
+class JsonDirDatasource implements CrudInterface {
     protected $directory;
     protected $data = [];
     protected $modified = false;
@@ -38,6 +39,9 @@ class JsonDir implements \Dev\IO\FileSystem\Contracts\CrudInterface {
             //return specific file
             return $this->properties[$key] ?? [];
         } elseif (is_array($key)) {
+            $file = $key[0];
+            $property = $key[1];
+            return $this->properties[$file][$property];
             //return specific files
             return array_intersect_key($this->properties, array_flip($key));
         }
