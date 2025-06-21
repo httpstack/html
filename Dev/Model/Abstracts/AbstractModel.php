@@ -13,17 +13,15 @@ abstract class AbstractModel implements ModelInterface{
      * Initializes the model with an empty properties array.
      */
 
-    public function __construct(protected CrudInterface $datasource){
-        if(is_null($datasource)) {
-            throw new \InvalidArgumentException("Datasource cannot be null");
-        }
-        ($datasource)?
-            $this->setAll($datasource->read()):
-            $this->setAll([]);
-        $this->datasource = $datasource;
-        $this->setAll($datasource->read());
+    public function __construct(array $properties = []){
+        $this->properties = $properties;
+        $this->_properties = $properties; // Store original properties for reference
     }
-
+    public function setDatasource(CrudInterface $datasource): void {
+        $this->datasource = $datasource;
+        // Optionally, you can read initial data from the datasource
+        $this->read();
+    }
     public function get(array|string $properties = []): array {
         if (is_string($properties)) {
             return $this->properties[$properties] ?? null;

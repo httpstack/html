@@ -1,8 +1,13 @@
 <?php 
 namespace Dev\IO\FileSystem\Collections;
 use Dev\Contracts\CrudInterface;
-
-class JsonDirDatasource implements CrudInterface {
+use Dev\IO\FileSystem\Abstracts\AbstractDatasource;
+/**
+ * Class JsonDirDatasource
+ * A datasource that manages JSON files in a directory.
+ * Implements CRUD operations for JSON files.
+ */
+class JsonDirDatasource extends AbstractDatasource implements CrudInterface {
     protected $directory;
     protected $data = [];
     protected $modified = false;
@@ -11,9 +16,9 @@ class JsonDirDatasource implements CrudInterface {
         if (!is_dir($this->directory)) {
             mkdir($this->directory, 0755, true);
         }
-        $this->loadData();
+        //$this->loadData();
     }
-
+    /*
     protected function loadData(): void {
         foreach (glob($this->directory . '*.json') as $file) {
             $filename = basename($file, '.json');
@@ -64,5 +69,6 @@ class JsonDirDatasource implements CrudInterface {
             file_put_contents($this->directory . $filename . '.json', json_encode($data, JSON_PRETTY_PRINT));
         }
     }
+        */
 }
 ?>
