@@ -22,7 +22,7 @@ abstract class AbstractModel implements ModelInterface{
         // Optionally, you can read initial data from the datasource
         $this->read();
     }
-    public function get(array|string $properties = []): array {
+    public function get(array $key=[]): array {
         if (is_string($properties)) {
             return $this->properties[$properties] ?? null;
         }
