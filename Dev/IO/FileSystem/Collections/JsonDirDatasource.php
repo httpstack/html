@@ -16,7 +16,7 @@ class JsonDirDatasource extends AbstractDatasource implements CrudInterface {
         if (!is_dir($this->directory)) {
             mkdir($this->directory, 0755, true);
         }
-        //$this->loadData();
+        //$this->loadData();    // Uncomment to load existing JSON files on initialization  
     }
     /*
     protected function loadData(): void {
