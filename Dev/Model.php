@@ -1,6 +1,6 @@
 <?php
 namespace Dev;
-
+use Dev\ModelInterface;
 class Model implements ModelInterface {
     protected array $data = [];
 

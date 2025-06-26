@@ -1,6 +1,8 @@
 <?php 
 require_once __DIR__ . '/autoload.php';
 use Dev\IO\Database\Connection\PdoConnect;
+use Dev\JsonDirDatasource;
+use Dev\DataModel;
 
 
 $dsn = 'mysql:host=localhost;dbname=cmcintosh;charset=utf8';
@@ -23,9 +25,9 @@ $options = [
         echo "Failed to connect to the database.";
     }
     
-    $table = new Dev\IO\Database\Collections\ActiveTable($pdo->getDbo(), 'assets');
-    $records = $table->getAllRecords();
-    var_dump($records);
-    $ar = new Dev\IO\Database\Items\ActiveRecord($pdo->getDbo(), 'assets', 3);
-    var_dump($ar->getAttributes());
+$jsonDS = new JsonDirDatasource('/var/www/html/HttpStack/App/data/template');
+$model = new DataModel($jsonDS);
+var_dump($model->getAll());
+//var_dump($jsonDS->read());
+
 ?>
