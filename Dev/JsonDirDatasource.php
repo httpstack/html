@@ -1,7 +1,7 @@
 <?php
 namespace Dev;
 use Dev\DatasourceInterface;
-class JsonDirDatasource implements \Dev\DatasourceInterface {
+class JsonDirDatasource implements DatasourceInterface {
     protected string $file;
     protected array $properties = [];
 
@@ -9,7 +9,22 @@ class JsonDirDatasource implements \Dev\DatasourceInterface {
     // with data from the file or directory
     public function __construct(string $file) {
         $this->file = $file;
-        if(is_dir($file)){
+
+    }
+    public function create(array $data): void {
+        if (!$this->readOnly) {
+            list($file,$json) = $data;
+            $filePath = $this->file . '/' . $file . '.json';
+            if (!file_exists($filePath)) {
+                file_put_contents($filePath, json_encode($json, JSON_PRETTY_PRINT));
+            }
+        } else {
+           throw new \Exception("Datasource is read-only, cannot create new records.");
+        }
+    }
+
+    public function read(): array {
+        if(is_dir($this->file)){
             foreach (glob($this->file . "/" . '*.json') as $file) {
                 $filename = basename($file, '.json');
                 print "filename: $filename\n";
@@ -22,23 +37,15 @@ class JsonDirDatasource implements \Dev\DatasourceInterface {
                 $this->properties = [];
             }
         }
-    }
-    public function create(array $data): array {
-        if(!$this->readOnly){
-            $filename = uniqid('record_') . '.json';
-            $this->properties[$filename] = $data;
-            file_put_contents($this->file . $filename, json_encode($data, JSON_PRETTY_PRINT));
-            return $data;
-        }
-        throw new \Exception("Datasource is read-only, cannot create new records.");
-    }
-
-    public function read(): array {
         return $this->properties;
     }
 
-    public function update(array $data): array {
+    public function update(array $data): void {
         // Implementation for updating a record
+        foreach ($data as $filename => $content) {
+            $file = "{$this->file}/{$filename}.json";
+            file_put_contents($file, json_encode($content, 128));
+        }
     }
 
     public function delete(array $data): array {

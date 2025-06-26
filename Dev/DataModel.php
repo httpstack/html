@@ -1,6 +1,7 @@
 <?php
 namespace Dev;
-
+use Dev\AbstractDataModel;
+use Dev\DatasourceInterface;
 class DataModel extends AbstractDataModel {
     public function __construct(protected DatasourceInterface $datasource) {
         //The class implementing DatasourceInterface must be passed to the constructor

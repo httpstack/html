@@ -7,7 +7,12 @@ class Model implements ModelInterface {
     public function __construct() {
         
     }
-    
+    protected function store():void{
+        $this->originalData = $this->data;
+    }
+    protected function restore():void{
+        $this->data = $this->originalData;
+    }
     public function get(string $key): mixed {
         return $this->data[$key] ?? null;
     }

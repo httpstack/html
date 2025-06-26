@@ -9,7 +9,7 @@ interface DatasourceInterface {
      * @param array $params The parameters for the new record.
      * @return array The result of the create operation.
      */
-    public function create(array $data): array;
+    public function create(array $data): void;
 
     /**
      * Read records from the datasource.
@@ -25,7 +25,7 @@ interface DatasourceInterface {
      * @param array $data The data to update the record with.
      * @return array The result of the update operation.
      */
-    public function update(array $data): array;
+    public function update(array $data): void;
 
     /**
      * Delete a record from the datasource.
