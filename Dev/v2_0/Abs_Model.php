@@ -6,8 +6,9 @@ abstract class Abs_Model implements IF_Atrributes, IF_AtrributeState {
     protected array $originalData = [];
     protected bool $readOnly = true;
 
-    public function __construct(protected \Dev\v2_0\DatasourceInterface $datasource) {
+    public function __construct(protected DatasourceInterface $datasource) {
         // Initialization code if needed
+        $data = $this->datasource->read();
     }
 
     public function isReadOnly(): bool {
