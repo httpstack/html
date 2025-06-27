@@ -6,7 +6,7 @@ use Dev\v2_0\BaseModel;
 use Dev\v2_0\DatasourceInterface;
 //use Dev\v2_0\
 //use Dev\v2_0\
-abstract class AbstractModel extends BaseModel implements IF_AtrributeState {
+abstract class AbstractModel extends BaseModel implements AtrributeStateInterface {
     protected array $states = [];
     public function __construct(protected DatasourceInterface&CrudInterface $datasource) {
         parent::__construct($this->datasource->read());
