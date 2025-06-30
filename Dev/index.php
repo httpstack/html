@@ -1,7 +1,8 @@
 <?php 
 require_once __DIR__ . '/autoload.php';
 use Dev\IO\Database\Connection\PdoConnect;
-use Dev\JsonDirDatasource;
+use Dev\v3\FileDatasource;
+use Dev\v3\Interfaces\Datasource;
 use Dev\DataModel;
 
 
@@ -25,9 +26,8 @@ $options = [
         echo "Failed to connect to the database.";
     }
     
-$jsonDS = new JsonDirDatasource('/var/www/html/HttpStack/App/data/template');
-$model = new DataModel($jsonDS);
-var_dump($model->getAll());
-//var_dump($jsonDS->read());
+$dsource = new FileDatasource('data.json', true);
+
+$model = new DataModel($dsource);
 
 ?>
