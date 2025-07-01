@@ -1,6 +1,6 @@
 <?php 
 define("DOC_ROOT", "/var/www/html");
-define("APP_ROOT", DOC_ROOT . "/Dev");
+define("APP_ROOT", DOC_ROOT . "/Dev/v3");
 function normalize_path($path) {
     $isAbsolute = ($path[0] === '/');
     $segments = explode('/', $path);

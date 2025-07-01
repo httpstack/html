@@ -4,7 +4,7 @@ namespace Dev\v3;
 use Dev\v3\Interfaces\Datasource;
 use Dev\v3\Interfaces\CRUD;
 
-abstract class AbstractDatasource implements Dev\v3\Interfaces\Datasource, CRUD
+abstract class AbstractDatasource implements Datasource, CRUD
 {
     protected bool $readOnly = false;
 

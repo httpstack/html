@@ -2,25 +2,32 @@
 namespace Dev\v3;
 
 use Dev\v3\Model\AbstractModel;
+use Dev\v3\Interfaces\CRUD; // Import the CRUD interface
 
+class TemplateModel extends AbstractModel {
 
-class TemplateModel extends AbstractModel{
+    protected string $templateName;
 
     /**
-     * The purpose of this class is to merley bring the abstract model into scope
-     * i guess i can make some high level functioons that make idk formnatting the data or doingf something
-     * with the data that is class specific
-     * 
-     * first we have to call the read method on the construct su[pplied datasoource
-     * ]
+     * Constructor for TemplateModel.
+     *
+     * @param CRUD $datasource The datasource for this model.
+     * @param string $templateName The name of the template this model represents.
+     * @param array $initialData Optional initial data for the model.
      */
-    protected string $templateName;
-    public function __construct(string $name) {
-        parent::__construct();
-        $this->templateName = $name;
+    public function __construct(CRUD $datasource, string $templateName, array $initialData = []) {
+        parent::__construct($datasource, $initialData); // Pass datasource and initial data to parent
+        $this->templateName = $templateName;
+        // Optionally, load data specific to this template name from the datasource
+        // For instance, if your FileDatasource could load a specific file based on templateName
+        // $loadedData = $datasource->read(['template_name' => $templateName]);
+        // $this->setAll($loadedData);
     }
 
-
+    // You can add template-specific methods here if needed
+    public function getTemplateName(): string {
+        return $this->templateName;
+    }
 }
 
 

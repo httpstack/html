@@ -1,0 +1,227 @@
+<?php
+namespace Dev\v3\Model;
+
+use Dev\v3\Interfaces\AttributeState;
+use Dev\v3\Interfaces\CRUD; // Use the CRUD interface for the datasource
+use InvalidArgumentException; // For proper exceptions
+
+abstract class AbstractDataModel extends BaseModel implements AttributeState {
+
+    protected array $states = [];
+    protected array $originalAttributes = []; // To track changes for dirty checking
+    protected bool $isNewRecord = true; // To determine create vs. update
+
+    // The datasource for this model
+    protected CRUD $datasource;
+
+    public function __construct(CRUD $datasource, array $initialData = []) {
+        parent::__construct($initialData); // Initialize attributes from BaseModel
+        $this->datasource = $datasource;
+        
+        // After initial data is set (e.g., from a 'find' operation)
+        // mark the initial state as clean. If no ID, assume new record.
+        if (!empty($initialData)) {
+            $this->isNewRecord = !isset($initialData['id']); // Assuming 'id' is primary key
+            $this->markAsClean();
+        }
+        $this->pushState('initial_load'); // Save initial state
+    }
+
+    /**
+     * Overrides the BaseModel's set method to enable dirty tracking.
+     */
+    public function set(string $key, mixed $value): void {
+        // Only mark as dirty if the value actually changes
+        if (!$this->has($key) || $this->get($key) !== $value) {
+            $this->pushState('before_set_' . $key); // Save state before change
+            parent::set($key, $value);
+        }
+    }
+
+    /**
+     * Overrides the BaseModel's setAll method.
+     */
+    public function setAll(array $data): void {
+        foreach ($data as $key => $value) {
+            // Only set if value changes to avoid unnecessary dirty marking
+            if (!$this->has($key) || $this->get($key) !== $value) {
+                $this->pushState('before_set_' . $key);
+                parent::set($key, $value);
+            }
+        }
+    }
+
+    /**
+     * Overrides the BaseModel's remove method.
+     */
+    public function remove(string $key): void {
+        if ($this->has($key)) {
+            $this->pushState('before_remove_' . $key);
+            parent::remove($key);
+        }
+    }
+
+    /**
+     * Overrides the BaseModel's clear method.
+     */
+    public function clear(): void {
+        if (!empty($this->attributes)) {
+            $this->pushState('before_clear');
+            parent::clear();
+        }
+    }
+
+    /**
+     * Pushes a new state onto the stack.
+     */
+    public function pushState(string $restorePoint): mixed {
+        $this->states[$restorePoint] = $this->attributes;
+    }
+
+    /**
+     * Pops the last state from the stack and restores it.
+     */
+    public function popState(): array {
+        $lastKey = array_key_last($this->states);
+        if ($lastKey !== null) {
+            $lastState = $this->states[$lastKey];
+            unset($this->states[$lastKey]);
+            $this->attributes = $lastState; // Restore the last state
+            return $lastState;
+        }
+        return []; // Return an empty array if no states are available
+    }
+
+    /**
+     * Retrieves a specific state from the stack (does not restore it).
+     */
+    public function getState(string $restorePoint): ?array {
+        return $this->states[$restorePoint] ?? null;
+    }
+
+    /**
+     * Marks the current attributes as the "clean" or "original" state.
+     */
+    protected function markAsClean(): void {
+        $this->originalAttributes = $this->attributes;
+    }
+
+    /**
+     * Checks if the model has unsaved changes.
+     */
+    public function isDirty(): bool {
+        return $this->attributes !== $this->originalAttributes;
+    }
+
+    /**
+     * Gets only the attributes that have changed since the last clean state.
+     * @return array
+     */
+    public function getDirtyAttributes(): array {
+        $dirty = [];
+        foreach ($this->attributes as $key => $value) {
+            if (!array_key_exists($key, $this->originalAttributes) || $this->originalAttributes[$key] !== $value) {
+                $dirty[$key] = $value;
+            }
+        }
+        return $dirty;
+    }
+
+    /**
+     * Orchestrates saving the model to the datasource.
+     * Determines whether to create or update.
+     * @return bool True on success, false on failure.
+     */
+    public function save(): bool {
+        if ($this->datasource->isReadonly()) {
+            throw new \Exception("Cannot save: Datasource is in read-only mode.");
+        }
+
+        try {
+            $result = false;
+            $dataToSave = $this->getAll(); // Send all current attributes for create/update
+
+            if ($this->isNewRecord) {
+                $createdData = $this->datasource->create($dataToSave);
+                if (!empty($createdData)) {
+                    // Update model with any data generated by datasource (e.g., ID)
+                    $this->setAll($createdData);
+                    $this->isNewRecord = false; // It's no longer a new record
+                    $result = true;
+                }
+            } else {
+                // Only send dirty attributes for update if you prefer partial updates
+                // Otherwise, send all attributes as done below.
+                $updatedData = $this->datasource->update($dataToSave);
+                // Update model with any data returned from the update operation
+                if (!empty($updatedData)) {
+                    $this->setAll($updatedData);
+                }
+                $result = true; // Assume update is successful by default or check $updatedData
+            }
+
+            if ($result) {
+                $this->markAsClean(); // Mark as clean after successful save
+            }
+            return $result;
+
+        } catch (\Exception $e) {
+            // Log the exception, or re-throw a more specific model-level exception
+            error_log("Model save failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Orchestrates deleting the model from the datasource.
+     * @return bool True on success, false on failure.
+     */
+    public function delete(): bool {
+        if ($this->datasource->isReadonly()) {
+            throw new \Exception("Cannot delete: Datasource is in read-only mode.");
+        }
+        // Assuming 'id' is the primary key and required for deletion
+        $id = $this->get('id');
+        if ($id === null) {
+            throw new InvalidArgumentException("Cannot delete a model without an 'id'.");
+        }
+
+        try {
+            $result = $this->datasource->delete(['id' => $id]); // Pass payload for delete
+            if ($result) {
+                $this->clear(); // Clear local model data after successful deletion
+                $this->isNewRecord = true; // Reset state
+                $this->originalAttributes = []; // Clear original attributes
+            }
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Model delete failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Static method to find a model by its ID.
+     * This allows you to do `UserModel::find($id, $datasource);`
+     */
+    public static function find(int $id, CRUD $datasource): ?static {
+        $data = $datasource->read(['id' => $id]); // Assuming datasource read can take ID
+        if (!empty($data)) {
+            // Assuming read returns a single record or first item if multiple
+            return new static($datasource, is_array($data) && count($data) === 1 ? reset($data) : $data);
+        }
+        return null;
+    }
+
+    /**
+     * Static method to find all models.
+     */
+    public static function findAll(CRUD $datasource, array $conditions = []): array {
+        $records = $datasource->read($conditions); // Assuming read can take conditions
+        $models = [];
+        foreach ($records as $record) {
+            $models[] = new static($datasource, $record);
+        }
+        return $models;
+    }
+}

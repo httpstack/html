@@ -1,0 +1,14 @@
+<?php
+namespace Dev\Contracts\Model; 
+interface AttributesInterface
+{
+    public function get(string $key, mixed $default = null): mixed;
+    public function set(string $key, mixed $value): void;
+    public function getAll(): array;
+    public function fill(array $data): void;
+    public function has(string $key): bool;
+    // Potentially for dirty tracking
+    public function getDirty(): array;
+    public function markAsClean(): void;
+    public function isDirty(string $key = null): bool;
+}
