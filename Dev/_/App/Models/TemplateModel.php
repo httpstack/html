@@ -3,7 +3,7 @@ namespace App\Models;
 
 use Stack\Model\AbstractModel;
 use App\Datasources\Contracts\CRUD;
-
+use Stack\Datasource\AbstractDatasource;
 
 class TemplateModel extends AbstractModel  
 {
@@ -13,7 +13,7 @@ class TemplateModel extends AbstractModel
      * @param \Dev\v3\Interfaces\CRUD $datasource The datasource for this model.
      * @param array $initialData Initial data to set in the model.
      */
-    public function __construct(CRUD $datasource)
+    public function __construct(AbstractDatasource $datasource)
     {
         parent::__construct($datasource);
     }

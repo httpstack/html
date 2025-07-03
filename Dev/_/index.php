@@ -1,30 +1,27 @@
 <?php
 require_once '/var/www/html/Dev/_/App/autoload.php';
-use App\Datasources\JsonDirDatasource;
 use App\Models\TemplateModel;
+use App\Datasources\DirDatasource;
 $config = [
     'crudHandlers' => [
-        'read' => function(string $endPoint, array $keys, callable $filter) {
+        'read' => function(string $endPoint, array $keys, ?callable $filter) {
             $files = [];
             foreach(scandir($endPoint) as $file) {
-            
                 if ($file !== '.' && $file !== '..') {
                     $absPath = realpath($endPoint . '/' . $file);
+                    echo $absPath;
                     if(is_file($absPath)){
-                       
-                        $data = json_decode(file_get_contents($absPath), true); 
-                        if($filter)
-                        {
-                            $data = array_filter($data, $filter);
-                        }
-                        if (empty($keys) || array_intersect_key($data, array_flip($keys))) {
-                            $files[$file] = $data;
-                        }
+                       $files[$file] = file_get_contents($absPath);
                     }
-
                 }
             }
-            return [];
+            if($keys){
+                $files = array_intersect_key($files, array_flip($keys));
+            }
+            if($filter){
+               return $filter($files) ;
+            } 
+            return $files;
         },
         'create' => function($data) {
             // Simulate creating data in a JSON directory
@@ -40,9 +37,25 @@ $config = [
         }
     ],
     'readOnly' => false,
-    'endPoint' => '/var/www/html/HttpStack/App/data/template'
+    'endPoint' => '/var/www/html/HttpStack/App/data/template',
+    'formatFilter' => function($data) {
+        // Example filter function to format data
+        foreach ($data as $key => $value) {
+            // You can modify the data here if needed
+            // For example, you might want to decode JSON strings
+            if (is_string($value) && strpos($value, '{') === 0) {
+                $data[$key] = json_decode($value, true);
+            }
+        }
+        return $data;
+    }
 ];
-$ds = new JsonDirDatasource($config);
+$ds = new DirDatasource($config);
 $model = new TemplateModel($ds);
-var_dump($model->getAll()); // Should be empty initially
+$obj = $ds->read();
+var_dump($obj); // Should be empty initially
+
+$a = ['file1' => 'content1', 'file2' => 'content2'];
+$keys = ['assets.json'];
+var_dump(array_intersect_key($a, array_flip($keys))); // Should return ['file1' => 'content1']
 ?>

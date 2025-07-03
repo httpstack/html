@@ -3,13 +3,14 @@ namespace Stack\Model;
 
 use App\Datasources\Contracts\CRUD;
 use Stack\Model\Concrete\BaseModel;
+use Stack\Datasource\AbstractDatasource;
 use Stack\Model\Contracts\AttributeState;
 abstract class AbstractModel extends BaseModel
 {
     protected array $states = []; // Stack to hold states
-    protected CRUD $datasource; // The datasource for this model
+    protected AbstractDatasource $datasource; // The datasource for this model
 
-    public function __construct(CRUD $datasource){
+    public function __construct(AbstractDatasource $datasource){
         // Initialize the datasource
         parent::__construct($datasource->read());
         $this->datasource = $datasource; // Initialize the datasource

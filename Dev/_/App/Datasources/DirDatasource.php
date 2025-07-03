@@ -11,7 +11,7 @@ class DirDatasource extends AbstractDatasource
     }
     public function read(array $query = []): array
     {  
-        $this->dataCache = parent::read($this->endPoint, $query);
+        $this->dataCache = parent::read($query);
         
         // Simulate reading data from a data source
         return $this->dataCache;
