@@ -1,5 +1,5 @@
 <?php
-namespace App\Datasources\Contracts;
+namespace Stack\Datasource\Contracts;
 interface CRUD{
     public function create(array $payload):mixed;
     public function read(array $payload = []):mixed;

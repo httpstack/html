@@ -5,7 +5,7 @@ use Stack\Model\AbstractModel;
 use App\Datasources\Contracts\CRUD;
 
 
-class Model extends AbstractModel
+class TemplateModel extends AbstractModel  
 {
     /**
      * Constructor for the Model class.
@@ -13,10 +13,9 @@ class Model extends AbstractModel
      * @param \Dev\v3\Interfaces\CRUD $datasource The datasource for this model.
      * @param array $initialData Initial data to set in the model.
      */
-    public function __construct(CRUD $datasource, array $initialData = [])
+    public function __construct(CRUD $datasource)
     {
-        parent::__construct($datasource, $initialData);
-        $this->setAll($this->datasource->read());
+        parent::__construct($datasource);
     }
 }
 ?>

@@ -7,16 +7,16 @@ use Stack\Model\Concrete\KeyStore;
 class BaseModel{
     protected KeyStore $attributes;
 
-    public function __construct(array $arrData = []){
+    public function __construct(array $initialData = []){
         $this->attributes = new KeyStore();
-        $this->setAll($arrData);
+        ($initialData)?$this->setAll($initialData):null;
     }
 
     public function set(string $strKey, mixed $mixValue): void{
         $this->attributes->set($strKey, $mixValue);
     }
 
-    public function get(string $strKey): mixed{
+    public function get(string $strKey): mixed{                       
         return $this->attributes->get($strKey);
     }
 

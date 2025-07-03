@@ -1,21 +1,20 @@
 <?php
 namespace App\Datasources;
 
-use App\Datasources\Contracts\CRUD;
+use Stack\Datasource\AbstractDatasource;
 
-class FolderDatasource implements CRUD
+class DirDatasource extends AbstractDatasource
 {
-    protected array $data = [];
-
-    public function __construct(array $config=[])
+    public function __construct(array $config)
     {
-        // Initialize with initial data if provided
-        $this->data = ["key1" => "value1", "key2" => "value2"];
+        parent::__construct($config);
     }
     public function read(array $query = []): array
-    {
+    {  
+        $this->dataCache = parent::read($this->endPoint, $query);
+        
         // Simulate reading data from a data source
-        return $this->data;
+        return $this->dataCache;
     }
     public function create(array $payload):mixed{
         return true;
