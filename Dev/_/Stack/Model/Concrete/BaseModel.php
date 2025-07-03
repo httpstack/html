@@ -1,8 +1,8 @@
 <?php
-namespace Dev\_\Stack\Model\Concrete;
+namespace Stack\Model\Concrete;
 
 
-use Dev\_\Stack\Model\Concrete\KeyStore;
+use Stack\Model\Concrete\KeyStore;
 
 class BaseModel{
     protected KeyStore $attributes;

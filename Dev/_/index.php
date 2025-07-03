@@ -1,9 +1,9 @@
 <?php
 require_once '/var/www/html/Dev/_/App/autoload.php';
-use \Dev\_\App\Datasources\TestDatasource;
-use \Dev\_\App\Models\Model;
+use App\Datasources\FolderDatasource;
+use App\Models\Model;
 
-$ds = new TestDatasource();
+$ds = new FolderDatasource();
 $model = new Model($ds,[]);
 var_dump($model->getAll()); // Should be empty initially
 ?>

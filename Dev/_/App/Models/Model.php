@@ -1,8 +1,9 @@
 <?php
-namespace Dev\_\App\Models;
+namespace App\Models;
 
-use Dev\_\Stack\Model\AbstractModel;
-use Dev\v3\Interfaces\CRUD;
+use Stack\Model\AbstractModel;
+use App\Datasources\Contracts\CRUD;
+
 
 class Model extends AbstractModel
 {

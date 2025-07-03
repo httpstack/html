@@ -1,5 +1,5 @@
 <?php
-namespace Dev\_\Stack\Model\Contracts;
+namespace Stack\Model\Contracts;
 interface Attributes
 {
     /**

@@ -1,8 +1,8 @@
 <?php
-namespace Dev\_\Stack\Model;
+namespace Stack\Model;
 
-use Dev\v3\Interfaces\CRUD;
-use Dev\_\Stack\Model\Concrete\BaseModel;
+use App\Datasources\Contracts\CRUD;
+use Stack\Model\Concrete\BaseModel;
 abstract class AbstractModel extends BaseModel
 {
     protected array $states = []; // Stack to hold states

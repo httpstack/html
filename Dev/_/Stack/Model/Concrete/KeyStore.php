@@ -1,6 +1,6 @@
 <?php
-namespace Dev\_\Stack\Model\Concrete;
-use Dev\_\Stack\Model\Contracts\Attributes;
+namespace Stack\Model\Concrete;
+use Stack\Model\Contracts\Attributes;
 
 class KeyStore implements Attributes
 {

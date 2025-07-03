@@ -1,9 +1,9 @@
 <?php
-namespace Dev\_\App\Datasources;
+namespace App\Datasources;
 
-use Dev\v3\Interfaces\CRUD;
+use App\Datasources\Contracts\CRUD;
 
-class TestDatasource implements CRUD
+class FolderDatasource implements CRUD
 {
     protected array $data = [];
 
