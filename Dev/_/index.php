@@ -1,7 +1,7 @@
 <?php
 require_once '/var/www/html/Dev/_/App/autoload.php';
 use App\Models\TemplateModel;
-use App\Datasources\DirDatasource;
+use Stack\Datasource\Concrete\Datasource;
 $config = [
     'crudHandlers' => [
         'read' => function(string $endPoint, array $keys, ?callable $filter) {
@@ -15,7 +15,7 @@ $config = [
                     }
                 }
             }
-            if($keys){
+            if(count($keys) > 0){
                 $files = array_intersect_key($files, array_flip($keys));
             }
             if($filter){
@@ -50,12 +50,10 @@ $config = [
         return $data;
     }
 ];
-$ds = new DirDatasource($config);
+$ds = new Datasource($config);
 $model = new TemplateModel($ds);
-$obj = $ds->read();
+$obj = $ds->read(['assets.json']);
 var_dump($obj); // Should be empty initially
 
-$a = ['file1' => 'content1', 'file2' => 'content2'];
-$keys = ['assets.json'];
-var_dump(array_intersect_key($a, array_flip($keys))); // Should return ['file1' => 'content1']
+// Should return ['file1' => 'content1']
 ?>

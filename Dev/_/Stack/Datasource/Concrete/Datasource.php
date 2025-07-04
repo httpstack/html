@@ -1,9 +1,9 @@
 <?php
-namespace App\Datasources;
+namespace Stack\Datasource\Concrete;
 
 use Stack\Datasource\AbstractDatasource;
 
-class DirDatasource extends AbstractDatasource
+class Datasource extends AbstractDatasource
 {
     public function __construct(array $config)
     {
