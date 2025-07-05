@@ -1,18 +1,18 @@
 <?php
 namespace HttpStack\App;
 
-use HttpStack\Container\Container;
+use HttpStack\Http\Request;
+use HttpStack\Http\Response;
 use HttpStack\IO\FileLoader;
 use HttpStack\Routing\Route;
 use HttpStack\Routing\Router;
 use HttpStack\Template\Template;
 use HttpStack\DataBase\DBConnect;
-use HttpStack\Http\Response;
-use HttpStack\Http\Request;
+use HttpStack\Container\Container;
 use HttpStack\DocEngine\DocEngine;
-use HttpStack\App\Datasources\FS\JsonDirectory;
 use HttpStack\App\Models\TemplateModel;
 use HttpStack\Datasource\FileDatasource;
+use HttpStack\App\Datasources\FS\JsonDirectory;
 class App{
     protected Container $container;
     protected Request $request;
@@ -20,7 +20,7 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = false;
+    public bool $debug = true;
     public function __construct(string $appPath = "/var/www/html/App/app") {
         $this->router = new Router();
         $this->request = new Request();
@@ -105,13 +105,21 @@ class App{
         $this->container->singleton("template", function(){
             $template = new Template();
             
+            /**
+             * This takes the namespace that you will use to reffer to the file
+             * and the base file name that will be used to load the file
+             * 
+             * loadFile(nameSpace, baseFileName);
+             */
             $html = $template->loadFile("base", "base");
             //
             //normalize the document so it has doctype html head title body tags proper nested
             $html = $template->normalizeHtml($html);
-            //set the cached version to the normalized one
+            //Update the cached version to the normalized one
             $template->setFile("base", $html);
-            var_dump($template->files);
+            //set the cached version to the normalized one
+            $template->setTemplate("base");
+           
             /**
              * $model is getting a datamodel that is sourced by a directory of json files
              * the model will be used to get the base data for the template
@@ -129,8 +137,13 @@ class App{
              * or save the model to the source.
              */
             $model = $this->container->make("template.model");
-            //var_dump($model->getAll());
-            $template->setVar($model->getAll()['base.json']);
+            $template->setVar($model->getAll());
+            $appName = $model->get("base")['appName'] ?? "A Default App Name";
+            $assets = $model->get("assets") ?? [];
+            $links = $model->get("links") ?? [];
+            $template->loadAssets($assets);
+            $template->bindAssets($template->getAssets());
+            var_dump($appName);
             // get a data model for the template , model will be ro with 3 array
             //the template will request the model->base from data model and load it's data array with it
             //template mostly built we just got a
@@ -158,6 +171,7 @@ class App{
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
             $tm = new TemplateModel($dataSource);
+            
             return $tm;
         });
     }

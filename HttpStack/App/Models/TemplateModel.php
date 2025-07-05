@@ -48,7 +48,6 @@ class TemplateModel extends AbstractModel
         $this->incomingSyncData = $this->getAll();
         return $this;
     }
-
     /**
      * Performs the file synchronization: creates new JSON files, updates changed JSON files,
      * and deletes JSON files not present in the incoming data.
