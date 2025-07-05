@@ -1,7 +1,7 @@
 <?php
-namespace App\Datasources\FS;
-use Stack\Datasource\Contracts\CRUD;
-use Stack\Datasource\AbstractDatasource;
+namespace HttpStack\App\Datasources\FS;
+use HttpStack\Datasource\Contracts\CRUD;
+use HttpStack\Datasource\AbstractDatasource;
 class JsonDirectory extends AbstractDatasource implements CRUD
 {
     protected string $jsonDirectory;
@@ -43,7 +43,9 @@ class JsonDirectory extends AbstractDatasource implements CRUD
                 if (is_file($absPath) && pathinfo($absPath, 4) === 'json') {
                     $content = file_get_contents($absPath);
                     if ($content !== false) {
-                        $files[$file] = json_decode($content, true);
+                        //GET BASENAME AND MAKE IT THE KEY
+                        $fileName = pathinfo($absPath, PATHINFO_BASENAME);
+                        $files[$fileName] = json_decode($content, true);
                     }
                 }
             }

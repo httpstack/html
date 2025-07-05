@@ -1,9 +1,9 @@
 <?php
-namespace Stack\Datasource;
+namespace HttpStack\Datasource;
 
 use Closure;
-use Stack\Datasource\Contracts\CRUD;
-use Stack\Datasource\Contracts\Datasource;
+use HttpStack\Datasource\Contracts\CRUD;
+use HttpStack\Datasource\Contracts\Datasource;
 abstract class AbstractDatasource implements Datasource
 {
     /**

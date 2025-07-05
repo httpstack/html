@@ -1,5 +1,5 @@
 <?php
-namespace Stack\Model\Contracts;
+namespace HttpStack\Model\Contracts;
 
 interface AttributeState {
 

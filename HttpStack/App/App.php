@@ -1,14 +1,16 @@
 <?php
 namespace HttpStack\App;
-use Request;
+
+use HttpStack\Container\Container;
 use HttpStack\IO\FileLoader;
 use HttpStack\Routing\Route;
 use HttpStack\Routing\Router;
 use HttpStack\Template\Template;
 use HttpStack\DataBase\DBConnect;
-use HttpStack\Container\Containerck\Http\{Request,Response};
+use HttpStack\Http\Response;
+use HttpStack\Http\Request;
 use HttpStack\DocEngine\DocEngine;
-use App\Datasources\FS\JsonDirectory;
+use HttpStack\App\Datasources\FS\JsonDirectory;
 use HttpStack\App\Models\TemplateModel;
 use HttpStack\Datasource\FileDatasource;
 class App{
@@ -18,7 +20,7 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = true;
+    public bool $debug = false;
     public function __construct(string $appPath = "/var/www/html/App/app") {
         $this->router = new Router();
         $this->request = new Request();
@@ -70,7 +72,7 @@ class App{
         if($this->debug){
             ini_set("display_errors", 1);
             ini_set("display_startup_errors", 1);
-            error_reporting(E_ALL);
+            error_reporting(32767);// E_ALL
         }
     }
     public function init(){
@@ -102,13 +104,14 @@ class App{
         });
         $this->container->singleton("template", function(){
             $template = new Template();
+            
             $html = $template->loadFile("base", "base");
-
+            //
             //normalize the document so it has doctype html head title body tags proper nested
             $html = $template->normalizeHtml($html);
             //set the cached version to the normalized one
             $template->setFile("base", $html);
-            
+            var_dump($template->files);
             /**
              * $model is getting a datamodel that is sourced by a directory of json files
              * the model will be used to get the base data for the template
@@ -126,7 +129,8 @@ class App{
              * or save the model to the source.
              */
             $model = $this->container->make("template.model");
-            $template->setVar($model->getModel()['base']);
+            //var_dump($model->getAll());
+            $template->setVar($model->getAll()['base.json']);
             // get a data model for the template , model will be ro with 3 array
             //the template will request the model->base from data model and load it's data array with it
             //template mostly built we just got a
@@ -138,6 +142,7 @@ class App{
             // use some Dom helpers to turn the links arrays into their respective navbars main,social,footer
             // add keys with value for navMain navSocial and navFooter to the templates datarray
             // replace the data with certain criteria on my expressions or data- attrbutes
+
             return $template;
         });
         $this->container->singleton("docEngine", function(){
@@ -145,13 +150,13 @@ class App{
         });
         $this->container->singleton("dbModel", function(){
             $dbConnect = $this->container->make("dbConnect");
-            $dbDS = new DBDatasource($dbConnect, "assets",);
+            $dbDS = new DBDatasource($dbConnect, "assets");
             return $dbModel;
         });
         $this->container->singleton("template.model", function(){
 
             $dataDirectory = appPath("dataDir") . "/template";
-            $dataSource = new FileDatasource($dataDirectory);
+            $dataSource = new JsonDirectory($dataDirectory, true);
             $tm = new TemplateModel($dataSource);
             return $tm;
         });

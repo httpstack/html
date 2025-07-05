@@ -9,6 +9,9 @@ use DOMXPath;
 use DOMElement;
 use HttpStack\IO\FileLoader;
 
+define("ELEMENT_NODE", 1);
+define("TEXT_NODE", 3);
+define("ATTRIBUTE_NODE", 2);
 /**
  * Splice Class
  * 
@@ -18,13 +21,14 @@ use HttpStack\IO\FileLoader;
  */
 
  class Template{
-    protected array $files = [];
+    public array $files = [];
     protected array $vars = [];
     protected FileLoader $fileLoader;
     public string $defaultFileExt = "html";
     protected DOMXPath $XPath;
-    protected DOMDocument $dom;
+    protected ?DOMDocument $dom;
     public function __construct(){
+        $this->dom = new DOMDocument("1.0","utf-8");
         $this->fileLoader = box("fileLoader");
     }
     public function loadFile(string $nameSpace, string $baseFileName){
@@ -42,15 +46,15 @@ use HttpStack\IO\FileLoader;
         return $this;
     }
     public function setTemplate(string $nameSpace):self{
-        $binOptions = LIBXML_HTML_NODEFDTD|LIBXML_NOERROR|LIBXML_NOWARNING;
-        $this->dom = new DOMDocument("1.0","utf-8");
+        $binOptions = 4|32|64;//LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOBLANKS
+        
         $this->dom->loadHTML($this->files[$nameSpace], $binOptions);
         $this->setXPath($this->dom);
         return $this;
     }
     public function makeAsset(string $file):DOMElement{
-        $ext = pathinfo($file, PATHINFO_EXTENSION);
-        $baseName = pathinfo($file, PATHINFO_BASENAME);
+        $ext = pathinfo($file, 4);//PATHINFO_EXTENSION
+        $baseName = pathinfo($file, 2);//PATHINFO_BASENAME
         $filePath = $this->fileLoader->findFile($baseName, null, $ext);
         
         switch($ext){
@@ -93,7 +97,7 @@ use HttpStack\IO\FileLoader;
     public function getVar(string $key = ''): mixed {
         return $key === '' ? $this->vars : ($this->vars[$key] ?? null);
     }
-
+ 
     public function normalizeHtml(string $html): string
     {
         // Ensure doctype and <html> tags
@@ -103,6 +107,9 @@ use HttpStack\IO\FileLoader;
         if (stripos($html, '<html') === false) {
             $html = "<html>\n" . $html;
         }
+        if(strpos($html, '<head') === false && strpos($html, '<body') ===false){
+            $html .= "\n<head>\n<title></title>\n</head>\n<body>";
+        }
         if (stripos($html, '</html>') === false) {
             $html .= "\n</html>";
         }
@@ -110,7 +117,7 @@ use HttpStack\IO\FileLoader;
         // Load into DOM to manipulate structure
         $dom = new DOMDocument('1.0', 'UTF-8');
         libxml_use_internal_errors(true);
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $dom->loadHTML($html, 8192 | 4);// LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
 
         // Ensure <head>
         $head = $dom->getElementsByTagName('head')->item(0);
@@ -144,12 +151,13 @@ use HttpStack\IO\FileLoader;
         $toMove = [];
         foreach (iterator_to_array($htmlNode->childNodes) as $node) {
             if (
-                $node->nodeType === XML_ELEMENT_NODE &&
-                !in_array($node->nodeName, ['head', 'body'])
+                $node->nodeType === ELEMENT_NODE &&
+                !in_array($node->nodeName, ['head', 'body'])// ELEMENT_NODE
             ) {
                 $toMove[] = $node;
             }
-            if ($node->nodeType === XML_TEXT_NODE && trim($node->nodeValue) !== '') {
+            if ($node->nodeType === TEXT_NODE && trim($node->nodeValue) !== '')// TEXT_NODE
+            {
                 $toMove[] = $node;
             }
         }
@@ -160,5 +168,5 @@ use HttpStack\IO\FileLoader;
         libxml_clear_errors();
         return $dom->saveHTML();
     }
- }
+}
 ?>

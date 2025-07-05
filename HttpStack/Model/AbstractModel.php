@@ -1,10 +1,10 @@
 <?php
-namespace Stack\Model;
+namespace HttpStack\Model;
 
-use Stack\Model\Concrete\BaseModel;
-use Stack\Datasource\Contracts\CRUD;
-use Stack\Datasource\AbstractDatasource;
-use Stack\Model\Contracts\AttributeState;
+use HttpStack\Model\Concrete\BaseModel;
+use HttpStack\Datasource\Contracts\CRUD;
+use HttpStack\Datasource\AbstractDatasource;
+use HttpStack\Model\Contracts\AttributeState;
 abstract class AbstractModel extends BaseModel
 {
     protected array $states = []; // Stack to hold states
@@ -46,7 +46,21 @@ abstract class AbstractModel extends BaseModel
         // Implement logic to retrieve a specific state from the stack
         // without modifying the current state.
     }
-
+    /*
+    //REWRITE THE METHODS THAT READ THE MODEL SO THEY PUSH THE STATE
+    public function get(string $strKey): mixed{
+        $this->pushState("before_get_{$strKey}");
+        return parent::get($strKey);
+    }
+    public function getAll(): array{
+        $this->pushState("before_getAll");
+        return parent::getAll();
+    }
+    public function has(string $strKey): bool{
+        $this->pushState("before_has_{$strKey}");
+        return parent::has($strKey);
+    }
+     */
     //REWRITE THE METHODS THAT MUTATE THE MODEL SO THEY PUSH THE STATE
     public function set(string $strKey, mixed $mixValue): void{
         $this->pushState("before_set_{$strKey}");

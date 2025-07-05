@@ -1,6 +1,6 @@
 <?php
 
-namespace Stack\Datasource\Contracts;
+namespace HttpStack\Datasource\Contracts;
 
 interface Datasource
 {

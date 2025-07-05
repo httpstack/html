@@ -1,9 +1,13 @@
 <?php
 namespace HttpStack\App\Controllers\Routes;
-
+use HttpStack\Model\AbstractModel;
 class PublicController{
 
     public function index($req,$res,$container,$matches){
+        $res->setContentType("text/html");
+        $template = $container->make("template");
+        $html = $template->getDom()->saveHTML();
+        $res->setBody($html);
         $html = $res->getBody();
         
         $res->setBody($html);

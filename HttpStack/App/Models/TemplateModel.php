@@ -1,9 +1,9 @@
 <?php
-namespace App\Models;
+namespace HttpStack\App\Models;
 
-use Stack\Model\AbstractModel;
-use Stack\Datasource\Contracts\CRUD; 
-use App\Datasources\FS\JsonDirectory;
+use HttpStack\Model\AbstractModel;
+use HttpStack\Datasource\Contracts\CRUD; 
+use HttpStack\App\Datasources\FS\JsonDirectory;
 //Import your specific datasource
 
 class TemplateModel extends AbstractModel
@@ -12,7 +12,7 @@ class TemplateModel extends AbstractModel
      * @var JsonDirectory The specific datasource for JSON file operations.
      */
     protected CRUD $datasource; // Type-hint specifically for JsonDirectory
-
+    public array $data = []; // This will hold the current state of the model
     /**
      * The associative array of data to be synchronized: ['filename' => ['key' => 'value'], ...]
      * This holds the "desired state" of the JSON files.
@@ -28,11 +28,12 @@ class TemplateModel extends AbstractModel
     public function __construct(JsonDirectory $datasource)
     {
         parent::__construct($datasource);
+        
         // Explicitly cast or ensure it's a JsonDirectory datasource
         if (!$datasource instanceof JsonDirectory) {
             throw new \InvalidArgumentException("TemplateModel requires a JsonDirectory datasource instance.");
         }
-        $this->datasource = $datasource;
+       // $this->data = $this->getAll(); // Initialize with existing data from the datasource
     }
 
     /**
