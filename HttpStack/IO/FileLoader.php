@@ -21,6 +21,7 @@ class FileLoader
      */
     protected string $defaultExtension = 'php';
 
+    protected string $defaultHtmlExtension = 'html';
     /**
      * File cache.
      */
@@ -300,9 +301,9 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
         return false;
     }
     public function readFile(string $baseName){
-        $path = $this->findFile($baseName, null, "html");
+        $path = $this->findFile($baseName, null, $this->defaultHtmlExtension);
         return file_get_contents($path);
-    }
+    }   
     /**
      * Set the default file extension.
      *

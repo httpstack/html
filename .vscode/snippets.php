@@ -36,6 +36,22 @@ $options = [
         echo "Failed to connect to the database.";
     }
 //$myobj = new MyClass();
+
+
+     // Load the template file
+        $dom = new DomDocument();
+        $dom->loadHTML($this->fileLoader->load($this->template));
+
+        // Set the title in the <title> tag
+        $xpath = new DOMXPath($dom);
+        $titleElements = $xpath->query('//title');
+        if ($titleElements->length > 0) {
+            $titleElements->item(0)->nodeValue = htmlspecialchars($title);
+        }
+
+        // Save the modified HTML back to the template
+        $this->fileLoader->save($this->template, $dom->saveHTML());
+
 ?>
 <!-- REACT-DOM BABEL JQUERY -->
 

@@ -35,7 +35,7 @@ class TemplateModel extends AbstractModel
         }
        // $this->data = $this->getAll(); // Initialize with existing data from the datasource
     }
-
+    public function getVars()
     /**
      * Sets the incoming data for file synchronization.
      * This data represents the desired state of the JSON files on disk.

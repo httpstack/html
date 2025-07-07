@@ -1,9 +1,9 @@
 <?php
 use HttpStack\Routing\Route;
-use HttpStack\App\Controllers\Middleware\SessionController;
 use HttpStack\App\Controllers\Middleware\TemplateInit;
+use HttpStack\App\Controllers\Middleware\SessionController;
 
 $global = new Route("GET",".*",[new SessionController,'process'], "before");
-//$global->addHandler([new TemplateInit(), 'process']);
+$global->addHandler([new TemplateInit(), 'process']);
 return [$global];
 ?>

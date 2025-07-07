@@ -103,7 +103,12 @@ class App{
             return $configs;
         });
         $this->container->singleton("template", function(){
-            $template = new Template();
+            $baseLayout = "base";
+            $fileLoader = $this->container->make("fileLoader");
+            //Create a new Template instance with the base layout and file loader
+            //The Template class will handle loading and rendering the HTML templates
+            $template = new Template($baseLayout, $fileLoader);
+            
             
             /**
              * This takes the namespace that you will use to reffer to the file

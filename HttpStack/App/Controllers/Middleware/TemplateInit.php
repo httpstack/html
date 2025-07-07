@@ -1,8 +1,8 @@
 <?php
 namespace HttpStack\App\Controllers\Middleware;
 
-use HttpStack\DocEngine\DocEngine;
 use HttpStack\Template\Template;
+use HttpStack\DocEngine\DocEngine;
 class TemplateInit{
     protected Template $template;
     public function __construct(){
@@ -15,8 +15,8 @@ class TemplateInit{
         //dd($this->template);
     }
     public function process($req,$res,$container){
-        $model = $container->make("template.model");
-        consoleLog($this->template->getCachedFile("base"));
+        //$model = $container->make("template.model");
+        //consoleLog($this->template->getCachedFile("base"));
         /*
         $base['appName'] = "HTtpstACK";
         $model->set("base", $base);
