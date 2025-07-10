@@ -6,171 +6,265 @@ use DOMElement;
 use DomDocument;
 use HttpStack\IO\FileLoader;
 use HttpStack\App\Models\TemplateModel;
+/*
+1.0.0: The initial class that handled basic variable replacement ({{var}}).
 
-class Template {
-    private DOMDocument $dom;
-    private DOMXPath $xpath;
-    private FileLoader $fileLoader;
-    private array $arrMeta = [];
-    private array $arrAssets = [
-        'css' => [],
-        'js' => [],
-        'font' => [],
-        'image' => []
-    ];
-    private array $arrNavs = [];
+1.1.0: A minor version bump for adding a significant, backward-compatible feature: the ability to define and use functions ({{func()}}).
 
-    public function __construct(string $strBaseFile, FileLoader $fileLoader) {
-        $this->fileLoader = $fileLoader;
-        $strTemplateContent = $this->fileLoader->loadFile($strBaseFile);
-        $this->dom = new DOMDocument();
-        // Suppress warnings from invalid HTML
-        libxml_use_internal_errors(true);
-        $this->dom->loadHTML($strTemplateContent);
-        libxml_clear_errors();
-        $this->xpath = new DOMXPath($this->dom);
+1.1.1: A patch version bump for fixing the bug where numeric literals in function arguments were not parsed correctly.
+
+1.2.0: The current version. This is another minor version bump because we added a major new feature: support for multiple, namespaced templates and the {{include()}} function for composition.
+*/
+
+/**
+ * A straightforward template engine for replacing placeholders and executing functions.
+ */
+
+
+/**
+ * A straightforward template engine for replacing placeholders and executing functions.
+ * Now with support for multiple namespaced templates.
+ *
+ * @version 1.2.0
+ */
+class Template
+{
+    /**    
+     * The version of the SimpleTemplate class.
+     */
+    const VERSION = '1.2.0';
+
+    /**
+     * @var array Holds the content of all loaded templates, keyed by namespace.
+     */
+    private array $arrTemplates = [];
+
+    /**
+     * @var array An associative array of variables for replacement.
+     */
+    private array $arrVariables = [];
+
+    /**
+     * @var array An associative array of user-defined functions.
+     */
+    private array $arrFunctions = [];
+
+    /**
+     * Constructor for the SimpleTemplate class.
+     *
+     * @param string $strMainTemplatePath The absolute path to the main template file.
+     * @param array  $arrInitialData Optional initial data to set.
+     * @throws \Exception If the template file is not found or readable.
+     */
+    public function __construct(string $strMainTemplatePath, array $arrInitialData = [])
+    {
+        // Load the main template into the 'main' namespace by default.
+        $this->addTemplate('main', $strMainTemplatePath);
+        $this->setAll($arrInitialData);
+
+        // Pre-define an 'include' function to allow rendering partials from within templates.
+        $this->define('include', function (string $strNamespace) {
+            // This calls the render method internally for the specified partial.
+            return $this->render($strNamespace);
+        });
     }
 
-    public function setTitle(string $strTitle): void {
-        $titleNode = $this->xpath->query('//title')->item(0);
-        if (!$titleNode) {
-            $titleNode = $this->dom->createElement('title');
-            $this->getHead()->appendChild($titleNode);
+    /**
+     * Adds a template from a file path to the internal collection with a given namespace.
+     *
+     * @param string $strNamespace The name to refer to this template by.
+     * @param string $strFilePath The absolute path to the template file.
+     * @return self
+     * @throws \Exception If the file is not found or readable.
+     */
+    public function addTemplate(string $strNamespace, string $strFilePath): self
+    {
+        if (!file_exists($strFilePath) || !is_readable($strFilePath)) {
+            throw new \Exception("Template file not found or is not readable: {$strFilePath}");
         }
-        $titleNode->nodeValue = htmlspecialchars($strTitle);
+        $this->arrTemplates[$strNamespace] = file_get_contents($strFilePath);
+        return $this;
     }
 
-    public function addMeta(string $strName, string $strContent): void {
-        $this->arrMeta[$strName] = $strContent;
+    /**
+     * Sets a single replacement variable.
+     *
+     * @param string $strKey The name of the variable (placeholder).
+     * @param mixed  $mixValue The value to replace the placeholder with.
+     * @return self
+     */
+    public function set(string $strKey, $mixValue): self
+    {
+        $this->arrVariables[$strKey] = $mixValue;
+        return $this;
     }
 
-    public function addAsset(string $strNamespace, string $strFilePath): void {
-        $strExtension = pathinfo($strFilePath, PATHINFO_EXTENSION);
-        if (in_array($strExtension, ['css', 'js', 'woff', 'woff2', 'ttf', 'otf'])) {
-            $this->arrAssets[$strExtension][$strNamespace] = $strFilePath;
-        } elseif (in_array($strExtension, ['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-            $this->arrAssets['image'][$strNamespace] = $strFilePath;
+    /**
+     * Sets multiple replacement variables from an associative array.
+     *
+     * @param array $arrData An associative array of variables.
+     * @return self
+     */
+    public function setAll(array $arrData): self
+    {
+        $this->arrVariables = array_merge($this->arrVariables, $arrData);
+        return $this;
+    }
+
+    /**
+     * Removes a replacement variable.
+     *
+     * @param string $strKey The key of the variable to remove.
+     * @return self
+     */
+    public function remove(string $strKey): self
+    {
+        unset($this->arrVariables[$strKey]);
+        return $this;
+    }
+
+    /**
+     * Defines a function that can be called from within the template.
+     *
+     * @param string   $strName     The name of the function.
+     * @param callable $calCallback The function/closure to execute.
+     * @return self
+     */
+    public function define(string $strName, callable $calCallback): self
+    {
+        $this->arrFunctions[$strName] = $calCallback;
+        return $this;
+    }
+
+    /**
+     * Renders a specific namespaced template.
+     *
+     * @param string $strNamespace The namespace of the template to render. Defaults to 'main'.
+     * @return string The rendered content.
+     * @throws \Exception If the requested template namespace does not exist.
+     */
+    public function render(string $strNamespace = 'main'): string
+    {
+        if (!isset($this->arrTemplates[$strNamespace])) {
+            throw new \Exception("Template with namespace '{$strNamespace}' not found.");
         }
+
+        $strTemplateContent = $this->arrTemplates[$strNamespace];
+        $self = $this; // Create a reference for use inside the closure
+
+        $strPattern = '/{{\s*([a-zA-Z0-9_]+)(?:\((.*?)\))?\s*}}/';
+
+        $strRenderedHtml = preg_replace_callback($strPattern, function ($arrMatches) use ($self) {
+            $strName = $arrMatches[1]; // The name of the variable or function.
+
+            if (isset($arrMatches[2])) {
+                $strArgsString = $arrMatches[2];
+                if (isset($self->arrFunctions[$strName])) {
+                    $arrParams = $self->parseArguments($strArgsString);
+                    return call_user_func_array($self->arrFunctions[$strName], $arrParams);
+                }
+                return '';
+            }
+            return $self->arrVariables[$strName] ?? '';
+        }, $strTemplateContent);
+
+        return $strRenderedHtml;
     }
 
-    public function addNav(string $strNavName, array $arrNavData, array $arrClasses = []): void {
-        $this->arrNavs[$strNavName] = [
-            'data' => $arrNavData,
-            'classes' => $arrClasses
-        ];
-    }
-
-    public function render(array $arrData, string $strMode = 'handlebar'): string {
-        $this->processMeta();
-        $this->processAssets();
-        $this->processNavs();
-
-        $strOutput = $this->dom->saveHTML();
-
-        if ($strMode === 'handlebar') {
-            $strOutput = $this->renderHandlebars($strOutput, $arrData);
-        } elseif ($strMode === 'datakey') {
-            $strOutput = $this->renderDataKey($arrData);
+    /**
+     * Parses the argument string from a function call in the template.
+     * @internal
+     */
+    public function parseArguments(string $strArgsString): array
+    {
+        if (trim($strArgsString) === '') {
+            return [];
         }
 
-        return $strOutput;
-    }
+        $arrArgs = str_getcsv($strArgsString);
+        $arrResolvedArgs = [];
 
-    private function renderHandlebars(string $strHtml, array $arrData): string {
-        return preg_replace_callback('/{{\s*(\w+)\s*}}/', function ($matches) use ($arrData) {
-            $strKey = $matches[1];
-            return isset($arrData[$strKey]) ? $arrData[$strKey] : '';
-        }, $strHtml);
-    }
+        foreach ($arrArgs as $strArg) {
+            $strArg = trim($strArg);
 
-    private function renderDataKey(array $arrData): string {
-        foreach ($arrData as $strKey => $value) {
-            $nodes = $this->xpath->query("//*[@data-key='$strKey']");
-            foreach ($nodes as $node) {
-                $node->nodeValue = $value;
+            if ((str_starts_with($strArg, "'") && str_ends_with($strArg, "'")) ||
+                (str_starts_with($strArg, '"') && str_ends_with($strArg, '"'))) {
+                $arrResolvedArgs[] = substr($strArg, 1, -1);
+            } elseif (is_numeric($strArg)) {
+                $arrResolvedArgs[] = strpos($strArg, '.') === false ? (int)$strArg : (float)$strArg;
+            } else {
+                $arrResolvedArgs[] = $this->arrVariables[$strArg] ?? null;
             }
         }
-        return $this->dom->saveHTML();
-    }
-
-    private function processMeta(): void {
-        foreach ($this->arrMeta as $strName => $strContent) {
-            $metaNode = $this->dom->createElement('meta');
-            $metaNode->setAttribute('name', $strName);
-            $metaNode->setAttribute('content', $strContent);
-            $this->getHead()->appendChild($metaNode);
-        }
-    }
-
-    private function processAssets(): void {
-        $head = $this->getHead();
-        $body = $this->getBody();
-
-        foreach ($this->arrAssets['css'] as $strUrl) {
-            $linkNode = $this->dom->createElement('link');
-            $linkNode->setAttribute('rel', 'stylesheet');
-            $linkNode->setAttribute('href', $strUrl);
-            $head->appendChild($linkNode);
-        }
-
-        foreach ($this->arrAssets['js'] as $strUrl) {
-            $scriptNode = $this->dom->createElement('script');
-            $scriptNode->setAttribute('src', $strUrl);
-            $body->appendChild($scriptNode);
-        }
-
-        if (!empty($this->arrAssets['image'])) {
-            $strJsCode = "const arrImages = [];";
-            foreach ($this->arrAssets['image'] as $strUrl) {
-                $strJsCode .= "arrImages.push('{$strUrl}');";
-            }
-            $strJsCode .= "arrImages.forEach(url => { const img = new Image(); img.src = url; });";
-            $scriptNode = $this->dom->createElement('script', $strJsCode);
-            $body->appendChild($scriptNode);
-        }
-    }
-
-    private function processNavs(): void {
-        foreach ($this->arrNavs as $strNavName => $arrNav) {
-            $nodes = $this->xpath->query("//*[@data-nav='$strNavName']");
-            foreach ($nodes as $node) {
-                $this->generateNav($node, $arrNav['data'], $arrNav['classes']);
-            }
-        }
-    }
-
-    private function generateNav(DOMElement $parentElement, array $arrNavData, array $arrClasses): void {
-        $ul = $this->dom->createElement('ul');
-        if (isset($arrClasses['ul'])) {
-            $ul->setAttribute('class', $arrClasses['ul']);
-        }
-
-        foreach ($arrNavData as $arrItem) {
-            $li = $this->dom->createElement('li');
-            if (isset($arrClasses['li'])) {
-                $li->setAttribute('class', $arrClasses['li']);
-            }
-
-            $a = $this->dom->createElement('a', htmlspecialchars($arrItem['text']));
-            $a->setAttribute('href', $arrItem['url']);
-            if (isset($arrClasses['a'])) {
-                $a->setAttribute('class', $arrClasses['a']);
-            }
-
-            $li->appendChild($a);
-            $ul->appendChild($li);
-        }
-
-        // Clear the placeholder and append the new nav
-        $parentElement->nodeValue = '';
-        $parentElement->appendChild($ul);
-    }
-
-    private function getHead(): DOMElement {
-        return $this->xpath->query('//head')->item(0);
-    }
-
-    private function getBody(): DOMElement {
-        return $this->xpath->query('//body')->item(0);
+        return $arrResolvedArgs;
     }
 }
+
+
+// --- Example Usage ---
+
+/*
+// 1. Create a main template file: 'main_layout.html'
+// ----------------------------------------------------
+// <!DOCTYPE html>
+// <html>
+// <head>
+//     <title>{{page_title}}</title>
+// </head>
+// <body>
+//     {{ include('header') }}
+//     <main>
+//         <p>{{main_content}}</p>
+//     </main>
+//     {{ include('footer') }}
+// </body>
+// </html>
+
+// 2. Create a partial template file: 'header.html'
+// --------------------------------------------------
+// <header>
+//     <h1>Welcome, {{user_name}}!</h1>
+// </header>
+
+// 3. Create another partial: 'footer.html'
+// ------------------------------------------
+// <footer>
+//     <p>Copyright {{ year() }}. All rights reserved.</p>
+// </footer>
+
+
+// 4. Use the class in your PHP script
+// -------------------------------------
+try {
+    $strMainTemplatePath = __DIR__ . '/main_layout.html';
+    $strHeaderPath = __DIR__ . '/header.html';
+    $strFooterPath = __DIR__ . '/footer.html';
+
+    $arrInitialData = [
+        'page_title' => 'Multi-Template Example',
+        'user_name' => 'John Doe',
+        'main_content' => 'This is the main content of the page, loaded into the main layout.'
+    ];
+
+    // Initialize with the main layout
+    $objTemplate = new SimpleTemplate($strMainTemplatePath, $arrInitialData);
+
+    // Add the partials with their own namespaces
+    $objTemplate->addTemplate('header', $strHeaderPath);
+    $objTemplate->addTemplate('footer', $strFooterPath);
+
+    // Define a function
+    $objTemplate->define('year', function(): string {
+        return date('Y');
+    });
+
+    // Render the final HTML by calling render() on the main template.
+    // The 'include' function will render the partials automatically.
+    $strFinalHtml = $objTemplate->render();
+
+    echo $strFinalHtml;
+
+} catch (\Exception $e) {
+    die('Error: ' . $e->getMessage());
+}
+*/

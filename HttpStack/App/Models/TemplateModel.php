@@ -33,9 +33,16 @@ class TemplateModel extends AbstractModel
         if (!$datasource instanceof JsonDirectory) {
             throw new \InvalidArgumentException("TemplateModel requires a JsonDirectory datasource instance.");
         }
+        //start putting the data into the model so that e=iot can be easily pulled, like a container
+        
        // $this->data = $this->getAll(); // Initialize with existing data from the datasource
     }
-    public function getVars()
+    public function getVars():array{
+        return $this->getAll()['base'];
+    }
+    public function buildNav(array $navLinks){
+        
+    }
     /**
      * Sets the incoming data for file synchronization.
      * This data represents the desired state of the JSON files on disk.

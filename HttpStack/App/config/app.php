@@ -9,6 +9,7 @@ $settings = [
     "uriRoot" => "/",
     "appPaths" => [
         "configDir" => APP_ROOT . "/config",
+        "componentsDir" => DOC_ROOT . "/public/assets/js/components",
         "dataDir" => APP_ROOT . "/data",
         "viewsDir" => APP_ROOT . "/Views/routes",
         "templatesDir" => APP_ROOT . "/Views/templates",

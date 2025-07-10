@@ -6,9 +6,12 @@ class PublicController{
     public function index($req,$res,$container,$matches){
         $res->setContentType("text/html");
         $template = $container->make("template");
-        $html = $template->getDom()->saveHTML();
-        $res->setBody($html);
-        $html = $res->getBody();
+        $template->set("pageView", "<div>im in a div </div>");
+        $fl = $container->make("fileLoader");
+        $testView = $fl->findFile("testView", null, "html");
+        $template->addTemplate("view", $testView );
+        $html = $template->render();
+ 
         
         $res->setBody($html);
         if(!$res->sent){

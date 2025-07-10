@@ -103,28 +103,31 @@ class App{
             return $configs;
         });
         $this->container->singleton("template", function(){
-            $baseLayout = "base";
+            $baseLayout = "base.html";
             $fileLoader = $this->container->make("fileLoader");
+            $filePath = $fileLoader->findFile($baseLayout,null,"html");
+                $arrInitialData = [
+        'page_title' => 'Template with Functions',
+        'user_name' => 'Jane Doe',
+        'user_bio' => 'This is a long biography that will definitely need to be wrapped to fit nicely on the page.'
+    ];
             //Create a new Template instance with the base layout and file loader
             //The Template class will handle loading and rendering the HTML templates
-            $template = new Template($baseLayout, $fileLoader);
+            $cmp = $fileLoader->findFile("MyComponent.jsx", null, "jsx");
+            $objTemplate = new Template($filePath, $arrInitialData);
+            $objTemplate->addTemplate("MyComponent", $cmp);
+            // Define a 'word_wrap' function that can be used in the template.
+            // It will use PHP's built-in wordwrap function.
+            $objTemplate->define('word_wrap', function(string $strText, int $intWidth, string $strBreak): string {
+                return wordwrap($strText, $intWidth, $strBreak, true);
+            });
+
+            // Define a simple function with no parameters.
+            $objTemplate->define('year', function(): string {
+                return date('Y');
+            });
             
-            
-            /**
-             * This takes the namespace that you will use to reffer to the file
-             * and the base file name that will be used to load the file
-             * 
-             * loadFile(nameSpace, baseFileName);
-             */
-            $html = $template->loadFile("base", "base");
-            //
-            //normalize the document so it has doctype html head title body tags proper nested
-            $html = $template->normalizeHtml($html);
-            //Update the cached version to the normalized one
-            $template->setFile("base", $html);
-            //set the cached version to the normalized one
-            $template->setTemplate("base");
-           
+            return $objTemplate;
             /**
              * $model is getting a datamodel that is sourced by a directory of json files
              * the model will be used to get the base data for the template
@@ -141,6 +144,7 @@ class App{
              * datasource and refresh the model with a current snapshot of that source 
              * or save the model to the source.
              */
+            /*
             $model = $this->container->make("template.model");
             $template->setVar($model->getAll());
             $appName = $model->get("base")['appName'] ?? "A Default App Name";
@@ -149,6 +153,7 @@ class App{
             $template->loadAssets($assets);
             $template->bindAssets($template->getAssets());
             var_dump($appName);
+            */
             // get a data model for the template , model will be ro with 3 array
             //the template will request the model->base from data model and load it's data array with it
             //template mostly built we just got a
@@ -161,7 +166,6 @@ class App{
             // add keys with value for navMain navSocial and navFooter to the templates datarray
             // replace the data with certain criteria on my expressions or data- attrbutes
 
-            return $template;
         });
         $this->container->singleton("docEngine", function(){
             return new DocEngine();

@@ -4,7 +4,7 @@ namespace HttpStack\App\Controllers\Middleware;
 use HttpStack\Template\Template;
 use HttpStack\DocEngine\DocEngine;
 class TemplateInit{
-    protected Template $template;
+    protected $template;
     public function __construct(){
         $container = box();
         //dd($container);
@@ -15,6 +15,15 @@ class TemplateInit{
         //dd($this->template);
     }
     public function process($req,$res,$container){
+        
+        $res->setHeader("Template", 'passed');
+        $this->template->set("appName", "httpStack");
+        $template = $this->template;
+        $container->singleton("template", function() use($template){
+            return $template;
+        });
+        //$res->setBody($this->template);
+        
         //$model = $container->make("template.model");
         //consoleLog($this->template->getCachedFile("base"));
         /*
@@ -23,10 +32,7 @@ class TemplateInit{
         $model->save();
        */
         //dd($model);
-        $res->setHeader("Content-Type", "text/html");
-        $res->setHeader("Middleware", "Template Loaded");
-        
-        $res->setBody("mw done");
+
     }
 }
 ?>

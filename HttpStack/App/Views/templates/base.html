@@ -1,8 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{page_title}}</title>
+    <!-- 1. React and ReactDOM CDN Scripts -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- 2. Babel CDN for JSX Transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+    <!-- 3. Placeholder for injecting PHP data into a global JS variable -->
+    <!-- This should come before the main script that uses the data. -->
+    {{ inject_data() }}
+
+</head>
 <body>
-    hello im a templatrwe
-</body>
+    
+    <div id="root">
+        <!-- React will render your app here -->
+    </div>
 
+    <script type="text/babel" src="/public/assets/js/app.jsx"></script>
+
+</body>
 </html>
