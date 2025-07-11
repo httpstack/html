@@ -18,6 +18,9 @@ $settings = [
         "routesDir" => APP_ROOT . "/routes"
     ],
     "routeDefs" => "/routes/public.php",
+    "template" =>[
+        "baseLayout" => "base.html",
+    ]
 ];
 return $settings;
 ?>

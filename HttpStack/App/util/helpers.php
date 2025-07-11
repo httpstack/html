@@ -31,6 +31,14 @@ if(!function_exists("appPath")){
         return app()->getSettings()["appPaths"];
     }
 }
+if(!function_exists("config")){
+    function config(string|null $key):string|array{
+        if($key){
+           return app()->getSettings()[$key];
+        }
+        return app()->getSettings();
+    }
+}
  function dd(mixed $data){
     $debug = app()->debug;
 

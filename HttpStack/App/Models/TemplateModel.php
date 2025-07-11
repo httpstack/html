@@ -1,139 +1,89 @@
 <?php
 namespace HttpStack\App\Models;
 
-use HttpStack\Model\AbstractModel;
-use HttpStack\Datasource\Contracts\CRUD; 
-use HttpStack\App\Datasources\FS\JsonDirectory;
+use Stringable;
+use HttpStack\Model\AbstractModel; 
+use HttpStack\Datasource\Contracts\CRUD;
 //Import your specific datasource
 
-class TemplateModel extends AbstractModel
+use HttpStack\App\Datasources\FS\JsonDirectory; // For __toString() if desired
+
+/**
+ * TemplateModel class.
+ * Represents the data specific to a template, providing structured access
+ * to common template data elements like assets and links.
+ */
+class TemplateModel extends AbstractModel implements Stringable // Added Stringable for demonstration
 {
-    /**
-     * @var JsonDirectory The specific datasource for JSON file operations.
-     */
-    protected CRUD $datasource; // Type-hint specifically for JsonDirectory
-    public array $data = []; // This will hold the current state of the model
-    /**
-     * The associative array of data to be synchronized: ['filename' => ['key' => 'value'], ...]
-     * This holds the "desired state" of the JSON files.
-     * The values are arrays (decoded JSON), not raw JSON strings.
-     */
-    protected array $incomingSyncData = [];
+    protected string $templateName;
 
     /**
-     * Constructor for the Model class.
+     * Constructor for TemplateModel.
      *
-     * @param JsonDirectory $datasource The datasource for this model (must be a JsonDirectory instance).
+     * @param CRUD $datasource The datasource for this model.
+     * @param string $templateName The logical name or identifier for this template's data.
+     * @param array $initialData Optional initial data for the model.
      */
-    public function __construct(JsonDirectory $datasource)
+    public function __construct(CRUD $datasource, string $templateName, array $initialData = [])
     {
-        parent::__construct($datasource);
-        
-        // Explicitly cast or ensure it's a JsonDirectory datasource
-        if (!$datasource instanceof JsonDirectory) {
-            throw new \InvalidArgumentException("TemplateModel requires a JsonDirectory datasource instance.");
-        }
-        //start putting the data into the model so that e=iot can be easily pulled, like a container
-        
-       // $this->data = $this->getAll(); // Initialize with existing data from the datasource
+        parent::__construct($datasource, $initialData);
+        $this->templateName = $templateName;
     }
-    public function getVars():array{
-        return $this->getAll()['base'];
-    }
-    public function buildNav(array $navLinks){
-        
-    }
+
     /**
-     * Sets the incoming data for file synchronization.
-     * This data represents the desired state of the JSON files on disk.
+     * Returns the logical name of this template's data.
      *
-     * @param array $data Associative array where keys are filenames and values are arrays (decoded JSON).
-     * @return self
+     * @return string
      */
-    public function setIncomingSyncData(): self
+    public function getTemplateName(): string
     {
-        $this->incomingSyncData = $this->getAll();
-        return $this;
+        return $this->templateName;
     }
+
     /**
-     * Performs the file synchronization: creates new JSON files, updates changed JSON files,
-     * and deletes JSON files not present in the incoming data.
+     * Retrieves the 'assets' array from the model's data.
      *
-     * @return array An associative array detailing the operations performed:
-     * ['created' => [], 'updated' => [], 'deleted' => [], 'skipped' => [], 'errors' => []]
+     * @return array An array of asset definitions, or an empty array if not found.
      */
-    public function save(): array
+    public function getAssets(): array
     {
-        $results = [
-            'created' => [],
-            'updated' => [],
-            'deleted' => [],
-            'skipped' => [],
-            'errors' => []
-        ];
-        $this->incomingSyncData = $this->getAll();
-        // 1. Get Current File List and their Contents from the datasource
-        // The read() method returns filename => decoded_json_array
-        $existingFilesData = $this->datasource->read();
+        return $this->get('assets') ?? [];
+    }
 
-        // Create a map for quick lookups and to track files processed
-        // Using array_keys for the file names from existing data
-        $filesToProcess = array_flip(array_keys($existingFilesData));
-
-        // 2. Iterate Through Incoming Data (Create/Update)
-        foreach ($this->incomingSyncData as $filename => $newDataArray) {
-            try {
-                if (array_key_exists($filename, $existingFilesData)) {
-                    // File exists, get its current decoded content
-                    $currentDataArray = $existingFilesData[$filename];
-
-                    // Compare contents: convert arrays to JSON strings for robust comparison
-                    // (Handles cases where key order might differ but content is same)
-                    $currentJson = json_encode($currentDataArray, 128 | 64);
-                    $newJson = json_encode($newDataArray, 128 | 64);
-
-                    if ($currentJson !== $newJson) {
-                        // Content is different, perform an update
-                        if ($this->datasource->update([$filename, $newDataArray])) {
-                            $results['updated'][] = $filename;
-                        } else {
-                            $results['errors'][] = "Failed to update file: {$filename}";
-                        }
-                    } else {
-                        // Content is the same, no action needed
-                        $results['skipped'][] = "File content identical, skipped update: {$filename}";
-                    }
-                    // Mark as processed from the existing files list
-                    unset($filesToProcess[$filename]);
-                } else {
-                    // File does not exist (Create)
-                    if ($this->datasource->create([$filename, $newDataArray])) {
-                        $results['created'][] = $filename;
-                    } else {
-                        $results['errors'][] = "Failed to create file: {$filename}";
-                    }
-                }
-            } catch (\Exception $e) {
-                // Catch exceptions from datasource methods
-                $results['errors'][] = "Error processing {$filename}: " . $e->getMessage();
+    /**
+     * Retrieves a specific asset by its name from the 'assets' array.
+     *
+     * @param string $assetName The name of the asset to retrieve.
+     * @return array|null The asset definition array, or null if not found.
+     */
+    public function getAsset(string $assetName): ?array
+    {
+        $assets = $this->getAssets();
+        foreach ($assets as $asset) {
+            if (isset($asset['name']) && $asset['name'] === $assetName) {
+                return $asset;
             }
         }
+        return null;
+    }
 
-        // 3. Identify and Delete Remaining Files (those in $existingFilesData but not in $this->incomingSyncData)
-        foreach ($filesToProcess as $filename => $value) {
-            try {
-                if ($this->datasource->delete([$filename])) {
-                    $results['deleted'][] = $filename;
-                } else {
-                    $results['errors'][] = "Failed to delete file: {$filename}";
-                }
-            } catch (\Exception $e) {
-                // Catch exceptions from datasource methods
-                $results['errors'][] = "Error deleting {$filename}: " . $e->getMessage();
-            }
-        }
+    /**
+     * Retrieves the 'links' array from the model's data.
+     *
+     * @return array An array of link definitions, or an empty array if not found.
+     */
+    public function getLinks(): array
+    {
+        return $this->get('links') ?? [];
+    }
 
-        return $results;
+    /**
+     * String representation of the TemplateModel.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return "TemplateModel: " . $this->getTemplateName() . " (ID: " . ($this->get('id') ?? 'N/A') . ")";
     }
 }
-?>

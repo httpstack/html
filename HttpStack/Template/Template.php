@@ -1,270 +1,337 @@
 <?php
 namespace HttpStack\Template;
 
-use DOMXPath;
-use DOMElement;
-use DomDocument;
-use HttpStack\IO\FileLoader;
-use HttpStack\App\Models\TemplateModel;
-/*
-1.0.0: The initial class that handled basic variable replacement ({{var}}).
-
-1.1.0: A minor version bump for adding a significant, backward-compatible feature: the ability to define and use functions ({{func()}}).
-
-1.1.1: A patch version bump for fixing the bug where numeric literals in function arguments were not parsed correctly.
-
-1.2.0: The current version. This is another minor version bump because we added a major new feature: support for multiple, namespaced templates and the {{include()}} function for composition.
-*/
+// Removed direct DOMDocument, DOMNode, DOMXPath, DOMElement imports
+// as these are now managed internally by the HttpStack\Dom\Dom class
+use Exception;
+use HttpStack\Dom\Dom; // Import the TemplateModel
+use Dev\v3\TemplateModel; // For error handling in render
+use HttpStack\IO\FileLoader; // Crucial: Import the custom Dom class
 
 /**
  * A straightforward template engine for replacing placeholders and executing functions.
- */
-
-
-/**
- * A straightforward template engine for replacing placeholders and executing functions.
- * Now with support for multiple namespaced templates.
+ * Now with support for multiple namespaced templates and composition with HttpStack\Dom\Dom.
  *
- * @version 1.2.0
+ * @version 1.4.0
+ *
+ * Version Log:
+ * 1.0.0: The initial class that handled basic variable replacement ({{var}}).
+ * 1.1.0: A minor version bump for adding a significant, backward-compatible feature: the ability to define and use functions ({{func()}}).
+ * 1.1.1: A patch version bump for fixing the bug where numeric literals in function arguments were not parsed correctly.
+ * 1.2.0: Added support for multiple, namespaced templates and the {{include()}} function for composition.
+ * 1.3.0: Changed constructor parameters to accept filePath, TemplateModel, and FileLoader for improved dependency management.
+ * 1.4.0: Refactored to use HttpStack\Dom\Dom for all HTML/DOM manipulation, replacing direct DOMDocument and DOMXPath usage.
  */
 class Template
 {
-    /**    
-     * The version of the SimpleTemplate class.
-     */
-    const VERSION = '1.2.0';
+    protected array $files = []; // Stores loaded template file contents (raw HTML strings)
+    protected array $vars = []; // Stores variables for replacement (legacy/direct set)
+    protected FileLoader $fileLoader;
+    protected Dom $dom; // Changed from DOMDocument/DOMXPath to HttpStack\Dom\Dom instance
+    protected TemplateModel $dataModel; // The TemplateModel instance for data
+    protected array $functions = []; // Stores callable functions for template use
 
+    public string $defaultFileExt = "html";
+    public string $defaultLayout = "base.html";
     /**
-     * @var array Holds the content of all loaded templates, keyed by namespace.
-     */
-    private array $arrTemplates = [];
-
-    /**
-     * @var array An associative array of variables for replacement.
-     */
-    private array $arrVariables = [];
-
-    /**
-     * @var array An associative array of user-defined functions.
-     */
-    private array $arrFunctions = [];
-
-    /**
-     * Constructor for the SimpleTemplate class.
+     * Constructor for the Template engine.
      *
-     * @param string $strMainTemplatePath The absolute path to the main template file.
-     * @param array  $arrInitialData Optional initial data to set.
-     * @throws \Exception If the template file is not found or readable.
+     * @param string $filePath The path to the main HTML template file.
+     * @param TemplateModel $dataModel The TemplateModel instance containing data for the template.
+     * @param FileLoader $fileLoader The file loader instance for resolving template paths.
+     * @throws Exception If the main template file cannot be loaded.
      */
-    public function __construct(string $strMainTemplatePath, array $arrInitialData = [])
+    public function __construct(string $filePath='', TemplateModel $dataModel, FileLoader $fileLoader)
     {
-        // Load the main template into the 'main' namespace by default.
-        $this->addTemplate('main', $strMainTemplatePath);
-        $this->setAll($arrInitialData);
-
-        // Pre-define an 'include' function to allow rendering partials from within templates.
-        $this->define('include', function (string $strNamespace) {
-            // This calls the render method internally for the specified partial.
-            return $this->render($strNamespace);
-        });
-    }
-
-    /**
-     * Adds a template from a file path to the internal collection with a given namespace.
-     *
-     * @param string $strNamespace The name to refer to this template by.
-     * @param string $strFilePath The absolute path to the template file.
-     * @return self
-     * @throws \Exception If the file is not found or readable.
-     */
-    public function addTemplate(string $strNamespace, string $strFilePath): self
-    {
-        if (!file_exists($strFilePath) || !is_readable($strFilePath)) {
-            throw new \Exception("Template file not found or is not readable: {$strFilePath}");
+        $this->fileLoader = $fileLoader;
+        $this->dataModel = $dataModel;
+        $filePath = $fileLoader->findFile($this->defaultLayout, null, "html");
+        // Load the main template file content as a raw HTML string
+        $loadedContent = $this->fileLoader->readFile(basename($filePath)); // Assuming readFile takes base filename
+        if ($loadedContent === null) {
+            throw new Exception("Failed to load main template file: {$filePath}");
         }
-        $this->arrTemplates[$strNamespace] = file_get_contents($strFilePath);
-        return $this;
+        $this->setFile('main', $loadedContent);
+
+        // Initialize the Dom object with the loaded content.
+        // The Dom class itself will handle its internal DOMDocument and DOMXPath.
+        // We pass the fileLoader to Dom as it also needs to resolve asset paths.
+        $this->dom = new Dom($this->files['main'], $this->fileLoader);
+
+        // Initialize template variables with data from the TemplateModel
+        $this->setVar($this->dataModel->getAll());
+
+        // Automatically append assets from the data model if they exist
+        // This leverages the Dom class's asset handling capabilities.
+        $assets = $this->dataModel->getAssets();
+        if (!empty($assets)) {
+            $this->dom->appendAssets($assets);
+        }
     }
 
     /**
-     * Sets a single replacement variable.
+     * Loads a file's contents into the internal files array.
      *
-     * @param string $strKey The name of the variable (placeholder).
-     * @param mixed  $mixValue The value to replace the placeholder with.
+     * @param string $nameSpace The namespace for the loaded file.
+     * @param string $baseFileName The base filename to load.
+     * @return string The content of the loaded file.
+     * @throws Exception If the file cannot be found or read.
+     */
+    public function loadFile(string $nameSpace, string $baseFileName): string
+    {
+        $content = $this->fileLoader->readFile($baseFileName);
+        if ($content === null) {
+            throw new Exception("File '{$baseFileName}' not found or could not be read by FileLoader.");
+        }
+        $this->files[$nameSpace] = $content;
+        return $this->files[$nameSpace];
+    }
+
+    /**
+     * Retrieves a loaded file's content by namespace, or all files.
+     *
+     * @param string $nameSpace The namespace of the file to retrieve.
+     * @return string|array The file content or all files if namespace is empty.
+     */
+    public function getFile(string $nameSpace = ''): string|array
+    {
+        return $nameSpace ? ($this->files[$nameSpace] ?? '') : $this->files;
+    }
+
+    /**
+     * Sets the content for a given template namespace.
+     * If the 'main' template is updated, it also re-initializes the internal Dom object
+     * with the new content to ensure it's working with the latest HTML structure.
+     *
+     * @param string $nameSpace The namespace to set.
+     * @param string $html The HTML content.
      * @return self
      */
-    public function set(string $strKey, $mixValue): self
+    public function setFile(string $nameSpace, string $html): self
     {
-        $this->arrVariables[$strKey] = $mixValue;
+        $this->files[$nameSpace] = $html;
+        // If the 'main' template (which the Dom object is currently managing) is updated,
+        // we need to re-initialize the Dom object with the new content.
+        if ($nameSpace === 'main') {
+            $this->dom = new Dom($this->files['main'], $this->fileLoader);
+        }
         return $this;
     }
 
     /**
-     * Sets multiple replacement variables from an associative array.
+     * Sets the active template for parsing and manipulation.
+     * This method now re-initializes the internal Dom object with the content
+     * of the specified template namespace.
      *
-     * @param array $arrData An associative array of variables.
+     * @param string $nameSpace The namespace of the file to set as the current template.
+     * @return self
+     * @throws Exception If the namespace is not found or HTML cannot be loaded.
+     */
+    public function setTemplate(string $nameSpace): self
+    {
+        if (!isset($this->files[$nameSpace])) {
+            throw new Exception("Template namespace '{$nameSpace}' not found.");
+        }
+        // Re-initialize the internal Dom object with the content of the specified template.
+        // This effectively switches the DOM the Template class is working with.
+        $this->dom = new Dom($this->files[$nameSpace], $this->fileLoader);
+        return $this;
+    }
+
+    /**
+     * Creates a DOMElement for an asset based on file extension.
+     * This method is now largely redundant as HttpStack\Dom\Dom::appendAssets is preferred
+     * for adding assets to the document.
+     *
+     * @param string $file The filename of the asset.
+     * @return DOMElement|null The created DOMElement, or null if type is not supported.
+     * @deprecated 1.4.0 Use HttpStack\Dom\Dom::appendAssets instead.
+     */
+    public function makeAsset(string $file): ?DOMElement
+    {
+        error_log("Warning: Template::makeAsset is deprecated. Use Dom::appendAssets instead.");
+        // This method's logic is now handled by Dom::appendAssets.
+        // Returning null or throwing an error is appropriate here.
+        return null;
+    }
+
+    /**
+     * Creates an array of DOMElement assets from a list of files.
+     * This method is now largely redundant as HttpStack\Dom\Dom::appendAssets is preferred.
+     *
+     * @param array $fileList An array of filenames.
+     * @return array An array of DOMElement assets.
+     * @deprecated 1.4.0 Use HttpStack\Dom\Dom::appendAssets instead.
+     */
+    public function makeResources(array $fileList): array
+    {
+        error_log("Warning: Template::makeResources is deprecated. Use Dom::appendAssets instead.");
+        return [];
+    }
+
+    /**
+     * Returns the current DOMDocument instance from the internal Dom object.
+     *
+     * @return \DOMDocument
+     */
+    public function getDom(): \DOMDocument
+    {
+        return $this->dom->getDomDocument(); // Delegate to the Dom object
+    }
+
+    /**
+     * Returns the current DOMXPath instance from the internal Dom object.
+     *
+     * @return \DOMXPath
+     */
+    public function getXPath(): \DOMXPath
+    {
+        return $this->dom->getXPath(); // Delegate to the Dom object
+    }
+
+    /**
+     * Sets template variables.
+     *
+     * @param string|array $key The variable name or an associative array of variables.
+     * @param string $value The value if $key is a string.
      * @return self
      */
-    public function setAll(array $arrData): self
+    public function setVar(string|array $key, string $value = ''): self
     {
-        $this->arrVariables = array_merge($this->arrVariables, $arrData);
+        if (is_array($key)) {
+            $this->vars = array_merge($this->vars, $key);
+        } else {
+            $this->vars[$key] = $value;
+        }
         return $this;
     }
 
     /**
-     * Removes a replacement variable.
+     * Retrieves a template variable or all variables.
      *
-     * @param string $strKey The key of the variable to remove.
+     * @param string $key The variable name.
+     * @return mixed The variable value, all variables, or null if not found.
+     */
+    public function getVar(string $key = ''): mixed
+    {
+        return $key === '' ? $this->vars : ($this->vars[$key] ?? null);
+    }
+
+    /**
+     * Defines a callable function that can be used in the template.
+     *
+     * @param string $name The name of the function in the template (e.g., 'word_wrap').
+     * @param callable $callback The PHP callable function.
      * @return self
      */
-    public function remove(string $strKey): self
+    public function define(string $name, callable $callback): self
     {
-        unset($this->arrVariables[$strKey]);
+        $this->functions[$name] = $callback;
         return $this;
     }
 
     /**
-     * Defines a function that can be called from within the template.
+     * Renders the template by replacing variables and executing functions.
      *
-     * @param string   $strName     The name of the function.
-     * @param callable $calCallback The function/closure to execute.
-     * @return self
+     * @param string $templateNamespace The namespace of the template to render.
+     * @return string The rendered HTML content.
+     * @throws Exception If the template namespace is not found or rendering fails.
      */
-    public function define(string $strName, callable $calCallback): self
+    public function render(string $templateNamespace = 'main'): string
     {
-        $this->arrFunctions[$strName] = $calCallback;
-        return $this;
-    }
-
-    /**
-     * Renders a specific namespaced template.
-     *
-     * @param string $strNamespace The namespace of the template to render. Defaults to 'main'.
-     * @return string The rendered content.
-     * @throws \Exception If the requested template namespace does not exist.
-     */
-    public function render(string $strNamespace = 'main'): string
-    {
-        if (!isset($this->arrTemplates[$strNamespace])) {
-            throw new \Exception("Template with namespace '{$strNamespace}' not found.");
+        if (!isset($this->files[$templateNamespace])) {
+            throw new Exception("Template namespace '{$templateNamespace}' not loaded.");
         }
 
-        $strTemplateContent = $this->arrTemplates[$strNamespace];
-        $self = $this; // Create a reference for use inside the closure
+        // IMPORTANT: Ensure the Dom object is working with the correct template content
+        // if setTemplate was called previously.
+        // This line ensures that if setTemplate was used to switch the active template,
+        // the Dom object is updated before rendering.
+        if ($this->dom->getDomDocument()->saveHTML() !== $this->files[$templateNamespace]) {
+             $this->dom = new Dom($this->files[$templateNamespace], $this->fileLoader);
+             // Re-apply assets if the Dom object was re-instantiated
+             $assets = $this->dataModel->getAssets();
+             if (!empty($assets)) {
+                 $this->dom->appendAssets($assets);
+             }
+        }
 
-        $strPattern = '/{{\s*([a-zA-Z0-9_]+)(?:\((.*?)\))?\s*}}/';
 
-        $strRenderedHtml = preg_replace_callback($strPattern, function ($arrMatches) use ($self) {
-            $strName = $arrMatches[1]; // The name of the variable or function.
+        // Get all data from the TemplateModel
+        $data = $this->dataModel->getAll();
+        // Merge with any directly set vars (though dataModel should be primary source)
+        $data = array_merge($data, $this->vars);
 
-            if (isset($arrMatches[2])) {
-                $strArgsString = $arrMatches[2];
-                if (isset($self->arrFunctions[$strName])) {
-                    $arrParams = $self->parseArguments($strArgsString);
-                    return call_user_func_array($self->arrFunctions[$strName], $arrParams);
+        // Get the current HTML content from the Dom object (which holds the manipulated DOM)
+        // This HTML now includes any appended assets or other DOM modifications.
+        $html = $this->dom->saveHtml();
+
+        // 1. Replace variables (e.g., {{varName}})
+        $html = preg_replace_callback('/\{\{([a-zA-Z0-9_]+)\}\}/', function ($matches) use ($data) {
+            $varName = $matches[1];
+            return $data[$varName] ?? ''; // Return empty string if variable not found
+        }, $html);
+
+        // 2. Execute functions (e.g., {{func(arg1, "arg2")}})
+        $html = preg_replace_callback('/\{\{([a-zA-Z0-9_]+)\((.*?)\)\}\}/', function ($matches) use ($data) {
+            $functionName = $matches[1];
+            $argsString = $matches[2];
+
+            if (!isset($this->functions[$functionName]) || !is_callable($this->functions[$functionName])) {
+                error_log("Warning: Undefined or non-callable function '{$functionName}' in template.");
+                return ''; // Return empty string or an error message
+            }
+
+            $args = [];
+            // Basic argument parsing: split by comma, trim, handle quotes/numbers
+            // This is a simplified parser; a real templating engine would have a more robust one.
+            if (!empty($argsString)) {
+                // Split by comma, but handle quoted strings
+                preg_match_all('/(?:[^,"]+|"[^"]*")+/', $argsString, $argMatches);
+                foreach ($argMatches[0] as $arg) {
+                    $arg = trim($arg);
+                    if (str_starts_with($arg, '"') && str_ends_with($arg, '"')) {
+                        $args[] = substr($arg, 1, -1); // Remove quotes for string literal
+                    } elseif (is_numeric($arg)) {
+                        $args[] = (strpos($arg, '.') !== false) ? (float)$arg : (int)$arg; // Numeric literal
+                    } elseif (array_key_exists($arg, $data)) {
+                        $args[] = $data[$arg]; // Variable from data context
+                    } elseif ($arg === 'true') {
+                        $args[] = true;
+                    } elseif ($arg === 'false') {
+                        $args[] = false;
+                    } elseif ($arg === 'null') {
+                        $args[] = null;
+                    } else {
+                        $args[] = $arg; // Treat as literal string if not found in data
+                    }
                 }
-                return '';
             }
-            return $self->arrVariables[$strName] ?? '';
-        }, $strTemplateContent);
 
-        return $strRenderedHtml;
+            try {
+                return call_user_func_array($this->functions[$functionName], $args);
+            } catch (Exception $e) {
+                error_log("Error executing template function '{$functionName}': " . $e->getMessage());
+                return ''; // Return empty string on error
+            }
+        }, $html);
+
+        return $html;
     }
 
     /**
-     * Parses the argument string from a function call in the template.
-     * @internal
+     * Normalizes HTML structure (ensures doctype, html, head, body tags).
+     * This method is now handled by the internal Dom object if needed.
+     *
+     * @param string $html The HTML string to normalize.
+     * @return string The normalized HTML string.
+     * @deprecated 1.4.0 Normalization is handled by Dom class on load.
      */
-    public function parseArguments(string $strArgsString): array
+    public function normalizeHtml(string $html): string
     {
-        if (trim($strArgsString) === '') {
-            return [];
-        }
-
-        $arrArgs = str_getcsv($strArgsString);
-        $arrResolvedArgs = [];
-
-        foreach ($arrArgs as $strArg) {
-            $strArg = trim($strArg);
-
-            if ((str_starts_with($strArg, "'") && str_ends_with($strArg, "'")) ||
-                (str_starts_with($strArg, '"') && str_ends_with($strArg, '"'))) {
-                $arrResolvedArgs[] = substr($strArg, 1, -1);
-            } elseif (is_numeric($strArg)) {
-                $arrResolvedArgs[] = strpos($strArg, '.') === false ? (int)$strArg : (float)$strArg;
-            } else {
-                $arrResolvedArgs[] = $this->arrVariables[$strArg] ?? null;
-            }
-        }
-        return $arrResolvedArgs;
+        error_log("Warning: Template::normalizeHtml is deprecated. Normalization is handled by Dom class on load.");
+        // If you need to normalize an arbitrary HTML string, you could create a temporary Dom instance.
+        // For now, return as is or throw an error.
+        return $html;
     }
 }
-
-
-// --- Example Usage ---
-
-/*
-// 1. Create a main template file: 'main_layout.html'
-// ----------------------------------------------------
-// <!DOCTYPE html>
-// <html>
-// <head>
-//     <title>{{page_title}}</title>
-// </head>
-// <body>
-//     {{ include('header') }}
-//     <main>
-//         <p>{{main_content}}</p>
-//     </main>
-//     {{ include('footer') }}
-// </body>
-// </html>
-
-// 2. Create a partial template file: 'header.html'
-// --------------------------------------------------
-// <header>
-//     <h1>Welcome, {{user_name}}!</h1>
-// </header>
-
-// 3. Create another partial: 'footer.html'
-// ------------------------------------------
-// <footer>
-//     <p>Copyright {{ year() }}. All rights reserved.</p>
-// </footer>
-
-
-// 4. Use the class in your PHP script
-// -------------------------------------
-try {
-    $strMainTemplatePath = __DIR__ . '/main_layout.html';
-    $strHeaderPath = __DIR__ . '/header.html';
-    $strFooterPath = __DIR__ . '/footer.html';
-
-    $arrInitialData = [
-        'page_title' => 'Multi-Template Example',
-        'user_name' => 'John Doe',
-        'main_content' => 'This is the main content of the page, loaded into the main layout.'
-    ];
-
-    // Initialize with the main layout
-    $objTemplate = new SimpleTemplate($strMainTemplatePath, $arrInitialData);
-
-    // Add the partials with their own namespaces
-    $objTemplate->addTemplate('header', $strHeaderPath);
-    $objTemplate->addTemplate('footer', $strFooterPath);
-
-    // Define a function
-    $objTemplate->define('year', function(): string {
-        return date('Y');
-    });
-
-    // Render the final HTML by calling render() on the main template.
-    // The 'include' function will render the partials automatically.
-    $strFinalHtml = $objTemplate->render();
-
-    echo $strFinalHtml;
-
-} catch (\Exception $e) {
-    die('Error: ' . $e->getMessage());
-}
-*/

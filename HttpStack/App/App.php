@@ -103,19 +103,15 @@ class App{
             return $configs;
         });
         $this->container->singleton("template", function(){
-            $baseLayout = "base.html";
+            /**
+             * Gather the 3 arguments for the  template construct
+             */
+            $templateModel = $this->container->make("template.model");
             $fileLoader = $this->container->make("fileLoader");
-            $filePath = $fileLoader->findFile($baseLayout,null,"html");
-                $arrInitialData = [
-        'page_title' => 'Template with Functions',
-        'user_name' => 'Jane Doe',
-        'user_bio' => 'This is a long biography that will definitely need to be wrapped to fit nicely on the page.'
-    ];
+
             //Create a new Template instance with the base layout and file loader
             //The Template class will handle loading and rendering the HTML templates
-            $cmp = $fileLoader->findFile("MyComponent.jsx", null, "jsx");
-            $objTemplate = new Template($filePath, $arrInitialData);
-            $objTemplate->addTemplate("MyComponent", $cmp);
+            $objTemplate = new Template($templateModel, $fileLoader);
             // Define a 'word_wrap' function that can be used in the template.
             // It will use PHP's built-in wordwrap function.
             $objTemplate->define('word_wrap', function(string $strText, int $intWidth, string $strBreak): string {
@@ -176,10 +172,9 @@ class App{
             return $dbModel;
         });
         $this->container->singleton("template.model", function(){
-
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
-            $tm = new TemplateModel($dataSource);
+            $tm = new TemplateModel($dataSource, "Base", ["baseLayout" => config("template")["baseLayout"]]);
             
             return $tm;
         });
