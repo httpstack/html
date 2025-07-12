@@ -1,5 +1,4 @@
-{
-    "assets": [
+[
         {
             "name": "Base",
             "ver": "1.0.0",
@@ -49,7 +48,7 @@
         },
         {
             "name": "React",
-            "file": "react.js",
+            "filename": "react.js",
             "enabled": true,
             "deps": [],
             "type": "script",
@@ -57,7 +56,7 @@
         },
         {
             "name": "ReactDOM",
-            "file": "react-dom.js",
+            "filename": "react-dom.js",
             "enabled": true,
             "deps": [
                 "react.js"
@@ -67,11 +66,18 @@
         },
         {
             "name": "Babel",
-            "file": "babel.js",
+            "filename": "babel.js",
             "enabled": true,
             "deps": [],
             "type": "script",
             "cdn": "https:\/\/unpkg.com\/@babel\/standalone\/babel.min.js"
+        },
+        {
+            "name": "BG",
+            "filename": "bg.jpg",
+            "enabled": true,
+            "deps": [],
+            "type": "image",
+            "cdn": ""
         }
     ]
-}

@@ -5,11 +5,15 @@ class PublicController{
 
     public function index($req,$res,$container,$matches){
         $res->setContentType("text/html");
+
+
         $template = $container->make("template");
-        $template->set("pageView", "<div>im in a div </div>");
-        $fl = $container->make("fileLoader");
-        $testView = $fl->findFile("testView", null, "html");
-        $template->addTemplate("view", $testView );
+        $template->setVariables([
+            "sessUser"=>"Chris",
+            "viewContent"=>"CTA or other content"
+        ]);
+        $template->importView("/var/www/html/HttpStack/App/Views/templates/testView.html");
+        //var_dump($template);
         $html = $template->render();
  
         

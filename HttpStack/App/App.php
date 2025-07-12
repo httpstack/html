@@ -1,12 +1,12 @@
 <?php
 namespace HttpStack\App;
 
+use Dev\Template\Template;
 use HttpStack\Http\Request;
 use HttpStack\Http\Response;
 use HttpStack\IO\FileLoader;
 use HttpStack\Routing\Route;
 use HttpStack\Routing\Router;
-use HttpStack\Template\Template;
 use HttpStack\DataBase\DBConnect;
 use HttpStack\Container\Container;
 use HttpStack\DocEngine\DocEngine;
@@ -20,7 +20,7 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = true;
+    public bool $debug = false;
     public function __construct(string $appPath = "/var/www/html/App/app") {
         $this->router = new Router();
         $this->request = new Request();
@@ -106,14 +106,17 @@ class App{
             /**
              * Gather the 3 arguments for the  template construct
              */
-            $templateModel = $this->container->make("template.model");
-            $fileLoader = $this->container->make("fileLoader");
+            //$templateModel = $this->container->make("template.model");
+            //$fileLoader = $this->container->make("fileLoader");
 
             //Create a new Template instance with the base layout and file loader
             //The Template class will handle loading and rendering the HTML templates
-            $objTemplate = new Template($templateModel, $fileLoader);
+            $objTemplate = new Template();
+            $objTemplate->load("/var/www/html/HttpStack/App/Views/templates/base.html");
+            //$html = $objTemplate->render();
             // Define a 'word_wrap' function that can be used in the template.
             // It will use PHP's built-in wordwrap function.
+            /*
             $objTemplate->define('word_wrap', function(string $strText, int $intWidth, string $strBreak): string {
                 return wordwrap($strText, $intWidth, $strBreak, true);
             });
@@ -122,7 +125,7 @@ class App{
             $objTemplate->define('year', function(): string {
                 return date('Y');
             });
-            
+            */
             return $objTemplate;
             /**
              * $model is getting a datamodel that is sourced by a directory of json files
@@ -174,7 +177,7 @@ class App{
         $this->container->singleton("template.model", function(){
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
-            $tm = new TemplateModel($dataSource, "Base", ["baseLayout" => config("template")["baseLayout"]]);
+            $tm = new TemplateModel($dataSource, "base", ["baseLayout" => config("template")["baseLayout"]]);
             
             return $tm;
         });

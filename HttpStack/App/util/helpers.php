@@ -44,9 +44,9 @@ if(!function_exists("config")){
 
     if($debug){
         
-        echo "<pre>";
+        echo "<hr/><pre>";
         print_r($data);
-        echo "</pre>";
+        echo "</pre><hr/>";
     }
  }
 ?>

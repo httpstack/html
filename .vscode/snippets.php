@@ -71,3 +71,76 @@ $options = [
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/babel" src="public/assets/js/app.js"></script>
 </head>
+
+
+
+<?php
+            $strType = $objAsset['type'] ?? ''; // Access type using array key
+            $strFileExt = pathinfo($objAsset['filename'], PATHINFO_EXTENSION);
+            echo $objAsset['filename'];
+            $src = $this->fileLoader->findFile($objAsset['filename'], null, $strFileExt);
+            $src = str_replace(DOC_ROOT, "", $src);
+            switch ($strType) {
+                case "sheet":
+                    if ($objHead) {
+                        $objLink = $dom->createElement("link");
+                        $objLink->setAttribute("rel", "stylesheet");
+                        $objLink->setAttribute("href", $src);
+                        if (isset($objAsset['media'])) { // Access media using array key
+                            $objLink->setAttribute("media", $objAsset['media']);
+                        }
+                        $objHead->appendChild($objLink);
+                    }
+                    break;
+
+                case "script":
+                    if ($objBody) { // Scripts can go in head or body, placing in head for simplicity unless specified
+                        $objScript = $dom->createElement("script");
+                        $objScript->setAttribute("src", $src);
+                        if (isset($objAsset['async']) && $objAsset['async']) { // Access async using array key
+                            $objScript->setAttribute("async", "true");
+                        }
+                        if (isset($objAsset['defer']) && $objAsset['defer']) { // Access defer using array key
+                            $objScript->setAttribute("defer", "true");
+                        }
+                        $objBody->appendChild($objScript);
+                    }
+                    break;
+
+                case "font":
+                    if ($objHead && !empty($src)) {
+                        // Check if it's a Google Fonts URL
+                        if (str_contains($src, 'fonts.googleapis.com') || str_contains($src, 'fonts.gstatic.com')) {
+                            $objLink = $dom->createElement("link");
+                            $objLink->setAttribute("rel", "stylesheet");
+                            $objLink->setAttribute("href", $src);
+                            $objHead->appendChild($objLink);
+                        } else {
+                            // Assume it's a local font file, use preload
+                            $extension = pathinfo($src, PATHINFO_EXTENSION);
+                            if (in_array($extension, ['woff', 'woff2', 'ttf', 'otf'])) {
+                                $objLink = $dom->createElement("link");
+                                $objLink->setAttribute("rel", "preload");
+                                $objLink->setAttribute("href", $src);
+                                $objLink->setAttribute("as", "font");
+                                $objLink->setAttribute("type", "font/{$extension}"); // e.g., font/woff2
+                                $objLink->setAttribute("crossorigin", "anonymous"); // Required for font preloading
+                                $objHead->appendChild($objLink);
+                            } else {
+                                error_log("Unsupported font extension for preload: " . $src);
+                            }
+                        }
+                    }
+                    break;
+
+                case "image":
+                    if (!empty($src)) {
+                        $imagePreloadUrls[] = $src; // Collect image URLs
+                    }
+                    break;
+
+                default:
+                    error_log("Unknown asset type encountered: " . $strType);
+                    break;
+            }
+?>
