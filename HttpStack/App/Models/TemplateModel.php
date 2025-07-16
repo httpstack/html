@@ -27,6 +27,7 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
     public function __construct(CRUD $datasource, string $templateName, array $initialData = [])
     {
         parent::__construct($datasource, $initialData);
+
         $this->templateName = $templateName;
     }
 

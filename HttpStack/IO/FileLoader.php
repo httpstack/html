@@ -86,7 +86,8 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
         $dir = $this->mappedDirectories[$directory] ?? $directory;
 
         if (is_dir($dir)) {
-            $files = $this->scanDirectoryForExtension($dir, $extension);
+            // Updated to use scanDirectoryForExtensions for consistency
+            $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
             foreach ($files as $file) {
                 if (basename($file) === $name) {
                     return $file;
@@ -100,7 +101,8 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
     // If no directory specified, search all mapped directories
     foreach ($this->mappedDirectories as $dir) {
         if (is_dir($dir)) {
-            $files = $this->scanDirectoryForExtension($dir, $extension);
+            // Updated to use scanDirectoryForExtensions for consistency
+            $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
             foreach ($files as $file) {
                 if (basename($file) === $name) {
                     return $file;
@@ -113,39 +115,55 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
 }
 
     /**
-     * Find all files by extension in mapped directories.
+     * Find all files by extension(s) in mapped directories.
+     *
+     * @param string|array $extensions A single extension string or an array of extensions.
+     * @param string|array|null $directories Optional. A single directory name, an array of directory names, or null for all mapped directories.
      */
-    public function findFilesByExtension(string $extension, ?string $directory = null): array
+    public function findFilesByExtension(string|array $extensions, string|array|null $directories = null): array
     {
         $files = [];
 
-        // Look in a specific directory if provided
-        if ($directory !== null) {
-            $dir = $this->mappedDirectories[$directory] ?? $directory;
+        // Ensure extensions is always an array
+        $extensions = (array) $extensions;
 
-            if (is_dir($dir)) {
-                $files = $this->scanDirectoryForExtension($dir, $extension);
+        $dirsToScan = [];
+        if ($directories !== null) {
+            $directories = (array) $directories; // Ensure it's an array if not null
+            foreach ($directories as $dirName) {
+                $dirPath = $this->mappedDirectories[$dirName] ?? $dirName;
+                if (is_dir($dirPath)) {
+                    $dirsToScan[] = $dirPath;
+                }
             }
-
-            return $files;
+        } else {
+            // If no specific directories provided, scan all mapped directories
+            $dirsToScan = array_values($this->mappedDirectories);
         }
 
-        // Look in all mapped directories
-        foreach ($this->mappedDirectories as $dir) {
-            $dirFiles = $this->scanDirectoryForExtension($dir, $extension);
-            $files = array_merge($files, $dirFiles);
+        foreach ($dirsToScan as $dir) {
+            if (is_dir($dir)) {
+                $dirFiles = $this->scanDirectoryForExtensions($dir, $extensions);
+                $files = array_merge($files, $dirFiles);
+            }
         }
 
-        return $files;
+        // Normalize the array to remove duplicates from scanning multiple directories
+        return array_unique($files);
     }
 
     /**
-     * Scan a directory for files with a specific extension.
+     * Scan a directory for files with specific extensions.
+     *
+     * @param string $directory The directory to scan.
+     * @param array $extensions An array of extensions (e.g., ['php', 'html']).
+     * @return array
      */
-    protected function scanDirectoryForExtension(string $directory, string $extension): array
+    protected function scanDirectoryForExtensions(string $directory, array $extensions): array
     {
         $files = [];
-        $extension = ltrim($extension, '.');
+        // Normalize extensions by removing leading dots
+        $normalizedExtensions = array_map(fn($ext) => ltrim($ext, '.'), $extensions);
 
         try {
             $iterator = new \RecursiveIteratorIterator(
@@ -156,16 +174,18 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
             );
 
             foreach ($iterator as $file) {
-                if ($file->isFile() && $file->getExtension() === $extension) {
+                if ($file->isFile() && in_array($file->getExtension(), $normalizedExtensions)) {
                     $files[] = $file->getPathname();
                 }
             }
         } catch (\Exception $e) {
-            // Directory may not exist or be accessible
+            // Directory may not exist or be accessible, log or handle as appropriate
+            // For now, we'll just return an empty array silently as per original behavior.
         }
 
         return $files;
     }
+
 
     /**
      * Load a file's contents.
@@ -196,7 +216,7 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
         }
 
         // Load the file
-        $content = include $path;
+        $content = include $path; // Be cautious: include returns the value of the included file, not its content
 
         if ($content === false) {
             throw new AppException("Failed to read file: {$path}");
@@ -302,6 +322,9 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
     }
     public function readFile(string $baseName){
         $path = $this->findFile($baseName, null, $this->defaultHtmlExtension);
+        if ($path === null) {
+            throw new AppException("File not found: {$baseName}");
+        }
         return file_get_contents($path);
     }   
     /**

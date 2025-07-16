@@ -4,7 +4,14 @@
     <div class="">
         <div id="root">{{appLogo}}{{appName}}<sub>{{appSlogan}}</sub></div>
     </div>
+ <h2>Your Links:</h2>
+<ul data-repeat="links as link">
+    <li data-repeat-item="link">
+        <a href="link[url]">link[text]</a>
+    </li>
+</ul>
     <div data-key="view"></div>
     <footer>
+        <div>{{ myFunc(data) }}</div>
         <div>{{appCopyright}}</div>
     </footer>

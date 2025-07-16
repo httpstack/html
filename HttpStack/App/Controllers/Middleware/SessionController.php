@@ -10,6 +10,7 @@ class SessionController{
         $this->session = new Session();
         if(session_status() !== PHP_SESSION_ACTIVE){
           $this->session->start();  
+          $this->session->set("sessUser", "Guest");
         } 
     }
      public function process($req,$res,$matches){

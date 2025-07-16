@@ -1,0 +1,4 @@
+1.) Find line comments 
+    \/\/\S.+
+    example: // I am a cluttery line comment
+

@@ -21,8 +21,15 @@
 		"prefix": "php-method",
 	 	"body": [
 	 		"public function methody(mixed \\$var):mixed{}",
-
 	 	],
 	 	"description": "make class outline"
+	},
+		 "Set a DOM Element Attribute": {
+	"scope": "php",
+		"prefix": "dom-attr",
+	 	"body": [
+	 		"->setAttribute('', '');",
+	 	],
+	 	"description": "Set attribute on dom element"
 	}
 }
