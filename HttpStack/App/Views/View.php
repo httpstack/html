@@ -10,10 +10,7 @@ class View {
         $this->template = $template;
         $this->response = $response;
 
-        $this->model = new ViewDatasource();
+        $this->model = box();
     }
-
-
-
 }
 ?>

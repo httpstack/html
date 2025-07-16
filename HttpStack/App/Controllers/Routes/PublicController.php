@@ -18,6 +18,8 @@ class PublicController{
             "viewContent"=>"View"
         ]);
         $template->importView("/var/www/html/HttpStack/App/Views/templates/testView.html");
+        $vm = $container->make("view.model", "Home");
+        
         //var_dump($template);
         $html = $template->render();
         ////////////////////////////

@@ -1,6 +1,7 @@
 <?php
 namespace HttpStack\App;
 
+use DBTable;
 use Dev\Template\Template;
 use HttpStack\Http\Request;
 use HttpStack\Http\Response;
@@ -10,9 +11,12 @@ use HttpStack\Routing\Router;
 use HttpStack\DataBase\DBConnect;
 use HttpStack\Container\Container;
 use HttpStack\DocEngine\DocEngine;
+use HttpStack\App\Models\PageModel;
 use HttpStack\App\Models\TemplateModel;
 use HttpStack\Datasource\FileDatasource;
+use HttpStack\App\Datasources\DB\ActiveTable;
 use HttpStack\App\Datasources\FS\JsonDirectory;
+
 class App{
     protected Container $container;
     protected Request $request;
@@ -103,83 +107,28 @@ class App{
             return $configs;
         });
         $this->container->singleton("template", function(){
-            /**
-             * Gather the 3 arguments for the  template construct
-             */
-            //$templateModel = $this->container->make("template.model");
-            //$fileLoader = $this->container->make("fileLoader");
 
-            //Create a new Template instance with the base layout and file loader
-            //The Template class will handle loading and rendering the HTML templates
             $objTemplate = new Template();
             $objTemplate->load("/var/www/html/HttpStack/App/Views/templates/base.html");
-            //$html = $objTemplate->render();
-            // Define a 'word_wrap' function that can be used in the template.
-            // It will use PHP's built-in wordwrap function.
-            /*
-            $objTemplate->define('word_wrap', function(string $strText, int $intWidth, string $strBreak): string {
-                return wordwrap($strText, $intWidth, $strBreak, true);
-            });
 
-            // Define a simple function with no parameters.
-            $objTemplate->define('year', function(): string {
-                return date('Y');
-            });
-            */
             return $objTemplate;
-            /**
-             * $model is getting a datamodel that is sourced by a directory of json files
-             * the model will be used to get the base data for the template
-             * the model will be used to get the resources array for the template
-             * the model will be used to get the links array for the template
-             * 
-             * DataModels have a simple $model array with key => value
-             * and are a reflection of an ACTUAL datasource.
-             * The getter and setter or get() and set() , dont wanna confuse
-             * these methods work on the virtual representation of the data
-             * and not the actual data source. You can set your DS (datasource)
-             * to be read/write or read only to prevent accidents.
-             * when you fetch() or save() these methods will dispatch the 
-             * datasource and refresh the model with a current snapshot of that source 
-             * or save the model to the source.
-             */
-            /*
-            $model = $this->container->make("template.model");
-            $template->setVar($model->getAll());
-            $appName = $model->get("base")['appName'] ?? "A Default App Name";
-            $assets = $model->get("assets") ?? [];
-            $links = $model->get("links") ?? [];
-            $template->loadAssets($assets);
-            $template->bindAssets($template->getAssets());
-            var_dump($appName);
-            */
-            // get a data model for the template , model will be ro with 3 array
-            //the template will request the model->base from data model and load it's data array with it
-            //template mostly built we just got a
-            // set title
-            // set meta
-            // get the resource array from model and 
-            // load the resources from file array to build links and scripts and app and append them
-            // get the other links array from model
-            // use some Dom helpers to turn the links arrays into their respective navbars main,social,footer
-            // add keys with value for navMain navSocial and navFooter to the templates datarray
-            // replace the data with certain criteria on my expressions or data- attrbutes
 
         });
-        $this->container->singleton("docEngine", function(){
-            return new DocEngine();
-        });
-        $this->container->singleton("dbModel", function(){
-            $dbConnect = $this->container->make("dbConnect");
-            $dbDS = new DBDatasource($dbConnect, "assets");
-            return $dbModel;
-        });
+
         $this->container->singleton("template.model", function(){
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
             $tm = new TemplateModel($dataSource, "base", ["baseLayout" => config("template")["baseLayout"]]);
             
             return $tm;
+        });
+        $this->container->singleton("view.model", function($page){
+            $dbConnect = $this->container->make("dbConnect");
+            $dbDatasource = new ActiveTable($dbConnect, "pages", false);
+            $viewModel = new PageModel($dbDatasource);
+
+            return $viewModel;
+
         });
     }
     public function run(){
