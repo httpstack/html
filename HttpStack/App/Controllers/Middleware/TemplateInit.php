@@ -37,8 +37,8 @@ class TemplateInit
         // 2.)  IMPORTANT: Set Templates data array to the base.json file for replace vars.
         //      And the array of links for the main nav bar
         $model = $container->make("template.model");
+        $mainLinks = $model->getLinks("main");
         $this->template->setVariables($model->getAll()['base.json']);
-        $mainLinks = $model->getAll()['links.json']['main'];
         $this->template->setVariables(["links" => $mainLinks]);
 
         $this->template->define("myFunc", function($myparam){

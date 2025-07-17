@@ -40,7 +40,9 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
     {
         return $this->templateName;
     }
-
+    public function getLinks($which){
+        return $this->getAll()['links.json'][$which];
+    }
     /**
      * Retrieves the 'assets' array from the model's data.
      *
@@ -68,15 +70,7 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
         return null;
     }
 
-    /**
-     * Retrieves the 'links' array from the model's data.
-     *
-     * @return array An array of link definitions, or an empty array if not found.
-     */
-    public function getLinks(): array
-    {
-        return $this->get('links') ?? [];
-    }
+
 
     /**
      * String representation of the TemplateModel.
