@@ -1,17 +1,27 @@
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <div class="">
-        <div id="root">{{appLogo}}{{appName}}<sub>{{appSlogan}}</sub></div>
+<div class="app-frame">
+    <div class="frame-header">
+        <div id="header-brand">
+            <span class="brand-logo">{{appLogo}}</span>
+            <span class="brand-title">{{appName}}</span>
+            <span class="brand-slogan"><sub>{{appSlogan}}</sub></span>
+        </div>
+        <div id="header-nav">
+            <ul data-repeat="links as link">
+                <li data-repeat-item="link">
+                    <a href="link[url]">link[text]</a>
+                </li>
+            </ul>
+        </div>
     </div>
- <h2>Your Links:</h2>
-<ul data-repeat="links as link">
-    <li data-repeat-item="link">
-        <a href="link[uri]">link[label]</a>
-    </li>
-</ul>
-    <div data-key="view"></div>
-    <footer>
+    <div class="frame-hero">
+
+    </div>
+    <div class="frame-view" data-key="view"></div>
+    <div class="frame-main">
+
+    </div>
+    <div class="frame-footer">
         <div>{{ myFunc(data) }}</div>
         <div>{{appCopyright}}</div>
-    </footer>
+    </div>
+</div>
