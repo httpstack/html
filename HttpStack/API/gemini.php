@@ -2,7 +2,7 @@
 
 if($_POST){ 
 
-    $apiKey = 'AIzaSyCScmRAP94bNdlIpCciEC3euWHQmTAsb0I'; // Replace with your actual API key
+    $apiKey = ''; // Replace with your actual API key
 
 
 
