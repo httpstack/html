@@ -2,6 +2,9 @@
   "dependencies": {
     "bootstrap-icons": "^1.11.3",
     "boxicons": "^2.1.4",
-    "jquery": "^3.7.1"
+    "jquery": "^3.7.1",
+    "tailwind": "^4.0.0",
+    "tailwind-config-viewer": "^2.0.4",
+    "scripts": {}
   }
 }
