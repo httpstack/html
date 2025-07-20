@@ -396,21 +396,29 @@ class Template implements TemplateInterface
         $body = $xpath->query("//body")->item(0); // Get the body element for script insertion
 
         $imagePreloadUrls = [];
-
+        $required = ["jquery.js"];
         foreach ($assets as $asset) {
             $strType = pathinfo($asset, PATHINFO_EXTENSION);
             $filename = pathinfo($asset, PATHINFO_BASENAME); 
+            $required = str_contains($filename, "required");
             $src = str_replace(DOC_ROOT, "", $asset);
             $imagesToPreload = [];
             switch($strType){
                 case "js":
-                    $script = $dom->createElement("script");
-                    $script->setAttribute("type", "text/javascript");
-                    if(str_contains($filename, "babel")){
-                        $script->setAttribute("type", "text/babel");
-                    }
-                    $script->setAttribute("src", $src);
-                    $body->appendChild($script);
+
+                        $script = $dom->createElement("script");
+                        $script->setAttribute("type", "text/javascript");
+                        if(str_contains($filename, "babel")){
+                            $script->setAttribute("type", "text/babel");
+                        }
+                        $script->setAttribute("src", $src);
+                        if($required){
+                            $head->appendChild($script);
+                        }else{
+                            $body->appendChild($script);
+                        }
+                        
+                    
                 break;
 
                 case "css":

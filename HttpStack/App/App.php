@@ -106,12 +106,10 @@ class App{
             }
             return $configs;
         });
-        $this->container->singleton("template", function(){
+        $this->container->singleton("template", function($baseTemplatePath){
 
-            $objTemplate = new Template();
-            $objTemplate->load("/var/www/html/HttpStack/App/Views/templates/base.html");
 
-            return $objTemplate;
+            return new Template();
 
         });
 
@@ -128,6 +126,14 @@ class App{
             $viewModel = new PageModel($dbDatasource);
 
             return $viewModel;
+
+        });
+        $this->container->singleton("view", function(TemplateModel $dataModel){
+            $view = new View($dataModel);
+            
+            $baseTemplatePath = $dataModel->get("basePath");
+            $template = $this->container->make("template");
+
 
         });
     }

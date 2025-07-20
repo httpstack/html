@@ -22,7 +22,7 @@
             <button class="hamburger-menu" aria-label="Toggle navigation">
                 <i class="bi bi-list"></i>
             </button>
-            <nav class="header-nav">
+            <nav class="header-nav nav-closed">
                 <ul class="nav-list" data-repeat="links as link">
                     <li class="nav-item" data-repeat-item="link">
                         <a href="link[uri]" class="nav-link">link[label]</a>
@@ -69,28 +69,13 @@
         $(document).ready(function () {
             // Hamburger menu functionality
             const $hamburger = $('.hamburger-menu');
+            console.log($hamburger);
             const $nav = $('.header-nav');
 
             $hamburger.on('click', function () {
-                $nav.toggleClass('nav-open');
+                $nav.toggleClass('.nav-open');
             });
 
-            // Theme toggle functionality
-            const $themeToggle = $('#theme-toggle');
-            const $html = $('html'); // Select the html tag
-
-            // Check for saved theme preference on page load
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                $html.attr('data-theme', savedTheme);
-            }
-
-            $themeToggle.on('click', function () {
-                const currentTheme = $html.attr('data-theme');
-                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-                $html.attr('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme); // Save preference
-            });
         });
     </script>
 </body>

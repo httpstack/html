@@ -32,14 +32,16 @@ class TemplateInit
         //      put generated links array into bindAssets
         $assetExtensions = ["js","css","woff","woff2","odt","ttf","jpg"];
         $assets = $this->fileLoader->findFilesByExtension($assetExtensions);
-        $this->template->bindAssets($assets);
+        
 
         // 2.)  IMPORTANT: Set Templates data array to the base.json file for replace vars.
         //      And the array of links for the main nav bar
         $model = $container->make("template.model");
         $mainLinks = $model->getLinks("main");
+        $model->set("links", $mainLinks);
+        $model->set("assets", $assets);
         $this->template->setVariables($model->getAll()['base.json']);
-        $this->template->setVariables(["links" => $mainLinks]);
+        
 
         $this->template->define("myFunc", function($myparam){
             return $myparam;
