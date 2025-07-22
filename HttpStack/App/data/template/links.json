@@ -16,9 +16,9 @@
             "icon": "fas fas-watch"
         },
         {
-            "label": "Home",
-            "uri": "\/home",
-            "icon": "fas fas-watch"
+            "label": "Stacks",
+            "uri": "\/HttpStack/App/Views/templates/stack.html",
+            "icon": "fas fas-stack"
         }
     ],
     "social": [

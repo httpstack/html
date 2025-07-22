@@ -16,6 +16,7 @@ use HttpStack\App\Models\TemplateModel;
 use HttpStack\Datasource\FileDatasource;
 use HttpStack\App\Datasources\DB\ActiveTable;
 use HttpStack\App\Datasources\FS\JsonDirectory;
+use HttpStack\App\Views\View;
 
 class App{
     protected Container $container;
@@ -24,18 +25,23 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = false;
+    public bool $debug = true;
     public function __construct(string $appPath = "/var/www/html/App/app") {
-        $this->router = new Router();
-        $this->request = new Request();
-        $this->response = new Response();
         $this->container = new Container();
-        
-        //INIT WILL BIND ALL THE INSTANCES/SERVICES TO THE CONTAINER
+
+        // Bind the essential instances FIRST
+        $this->container->singleton(Container::class, $this->container);
+        $this->container->singleton(self::class, $this);
+
+        // INIT will bind all other services to the container
         $this->init();
 
-        //GET SETTINGS FOR APP
-        $this->settings = $this->container->make("config")['app'];
+        // Now that config is loaded, get settings
+        $this->settings = $this->container->make('config')['app'];
+        $this->request = $this->container->make(Request::class);
+        $this->response = $this->container->make(Response::class);
+        $this->router = $this->container->make(Router::class);
+        
         $this->reportErrors();
         $GLOBALS["app"] = $this;
     }
@@ -80,24 +86,8 @@ class App{
         }
     }
     public function init(){
-        $this->container->singleton(Container::class, $this->container);
-        $this->container->singleton("app", $this);
-        $this->container->singleton(self::class, $this);
-        $this->container->singleton("dbConnect", function(){
-            return new DBConnect();
-        });
-        $this->container->singleton("router", $this->router);
-        $this->container->singleton("request", $this->request);
-        $this->container->singleton("response", $this->response);
-        
-        $this->container->singleton("fileLoader", function() {
-            $fl = new FileLoader();
-            foreach($this->settings['appPaths'] as $name => $path){
-                $fl->mapDirectory($name, $path);
-            }
-            return $fl;
-        });
-        $this->container->singleton("config", function()  {
+  // --- 1. Load Configurations and Aliases ---
+        $this->container->singleton('config', function () {
             $configDir = APP_ROOT . "/config";
             $configs = [];
             foreach (glob($configDir . '/*.php') as $file) {
@@ -106,36 +96,58 @@ class App{
             }
             return $configs;
         });
-        $this->container->singleton("template", function($baseTemplatePath){
+        
+        // Load aliases from the config file into the container
+        $aliases = $this->container->make('config')['aliases'] ?? [];
+        foreach ($aliases as $alias => $fqn) {
+            $this->container->alias($alias, $fqn);
+        }
 
+        // --- 2. Bind Core Services (as Singletons) ---
+        $this->container->singleton(Request::class, fn() => new Request());
+        $this->container->singleton(Response::class, fn() => new Response());
+        $this->container->singleton(Router::class, fn() => new Router());
+        $this->container->singleton(DBConnect::class, fn() => new DBConnect());
 
-            return new Template();
-
+        // --- 3. Bind Models and Views (use `bind` for non-singletons) ---
+        
+        // Use `bind` because a PageModel is specific to a request
+        $this->container->bind(PageModel::class, function(Container $c) {
+            // The container will automatically create the DBConnect instance for you!
+            $dbDatasource = new ActiveTable($c->make(DBConnect::class), "pages", false);
+            return new PageModel($dbDatasource);
         });
 
-        $this->container->singleton("template.model", function(){
+        // Use `bind` because a View is also specific to a request
+        $this->container->bind(View::class, function(Container $c) {
+            // The container will now build the PageModel for you when you ask for a View.
+            // This is dependency injection!
+            return new View($c->make(PageModel::class));
+        });
+        $this->container->singleton(FileLoader::class, function (Container $c) {
+            // We need the 'config' service to get the application settings
+            $settings = $c->make('config')['app'];
+
+            $fl = new FileLoader();
+
+            // Loop over the appPaths and map them, just like in your original code
+            if (!empty($settings['appPaths']) && is_array($settings['appPaths'])) {
+                foreach ($settings['appPaths'] as $name => $path) {
+                    $fl->mapDirectory($name, $path);
+                }
+            }
+
+            return $fl;
+        });
+        // Use a singleton for the TemplateModel if its data is truly global
+        $this->container->singleton(TemplateModel::class, function() {
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
-            $tm = new TemplateModel($dataSource, "base", ["baseLayout" => config("template")["baseLayout"]]);
+            // Notice we're injecting config values, not the container
+            $baseLayout = config("template")["baseLayout"];
+            return new TemplateModel($dataSource, "base", ["baseLayout" => $baseLayout]);
+        });
             
-            return $tm;
-        });
-        $this->container->singleton("view.model", function($page){
-            $dbConnect = $this->container->make("dbConnect");
-            $dbDatasource = new ActiveTable($dbConnect, "pages", false);
-            $viewModel = new PageModel($dbDatasource);
-
-            return $viewModel;
-
-        });
-        $this->container->singleton("view", function(TemplateModel $dataModel){
-            $view = new View($dataModel);
-            
-            $baseTemplatePath = $dataModel->get("basePath");
-            $template = $this->container->make("template");
-
-
-        });
     }
     public function run(){
         $this->router->dispatch($this->request, $this->response, $this->container);

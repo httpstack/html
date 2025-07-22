@@ -143,4 +143,7 @@ $options = [
                     error_log("Unknown asset type encountered: " . $strType);
                     break;
             }
+
+
+$pdo = new PDO("mysql:host")
 ?>

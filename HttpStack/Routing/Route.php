@@ -1,6 +1,7 @@
 <?php
 namespace HttpStack\Routing;
 use HttpStack\Contracts\RouteInterface;
+use \Closure;
 class Route implements RouteInterface
 {
     protected string $method;
@@ -16,7 +17,7 @@ class Route implements RouteInterface
         $this->addHandler($handler);
     }
 
-    public function addHandler(array $handler): self
+    public function addHandler(callable $handler): self
     {
         $this->handlers[] = $handler;
         return $this;

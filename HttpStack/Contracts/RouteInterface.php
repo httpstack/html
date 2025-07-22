@@ -3,7 +3,7 @@ namespace HttpStack\Contracts;
 
 interface RouteInterface
 {
-    public function addHandler(array $handler): self;
+    public function addHandler(callable $handler): self;
     public function getHandlers(): array;
     public function getMethod(): string;
     public function getUri(): string;

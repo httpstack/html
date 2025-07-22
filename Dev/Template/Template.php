@@ -348,6 +348,8 @@ class Template implements TemplateInterface
         return $this->render(); // Call render to ensure full processing
     }
 
+    //even though this is a public method, we will access it only through the view class
+    //who delegates its importView to this one
     public function importView(string $filePath): void
     {
         if (!file_exists($filePath)) {

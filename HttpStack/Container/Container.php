@@ -11,15 +11,37 @@ class Container implements ContainerInterface {
     protected $bindings = [];
     protected $instances = [];
     private array $props = [];
+    protected $aliases = [];
 
 
     public function __construct() {
 
     }
 
+    /**
+     * NEW: Add an alias for a class FQN.
+     */
+    public function alias(string $alias, string $fqn): void
+    {
+        $this->aliases[$alias] = $fqn;
+    }
 
     public function bind(string $abstract, $concrete): void {
         $this->bindings[$abstract] = $concrete;
+    }
+
+
+    public function singleton(string $abstract, $concrete) {
+        $this->bindings[$abstract] = $concrete;
+        $this->instances[$abstract] = null; // Mark it as a singleton
+    }
+
+    public function make(string $abstract, mixed ...$params): mixed {
+        if (isset($this->instances[$abstract])) {
+            return $this->instances[$abstract];
+        }
+
+        return $this->resolve($abstract, $params);
     }
 
     public function addProperty(string $name, $value) {
@@ -37,20 +59,6 @@ class Container implements ContainerInterface {
     public function hasProperty(string $name) {
         return isset($this->props[$name]);
     }
-
-    public function singleton(string $abstract, $concrete) {
-        $this->bindings[$abstract] = $concrete;
-        $this->instances[$abstract] = null; // Mark it as a singleton
-    }
-
-    public function make(string $abstract, mixed ...$params): mixed {
-        if (isset($this->instances[$abstract])) {
-            return $this->instances[$abstract];
-        }
-
-        return $this->resolve($abstract, $params);
-    }
-
     protected function resolveDependencies(array $dependencies, array $parameters): array
     {
         $results = [];
@@ -135,26 +143,44 @@ class Container implements ContainerInterface {
         
         throw new AppException("Invalid callback provided to container->call()");
     }
-    public function resolve(string $abstract, array $params = []) {
-        if (!isset($this->bindings[$abstract])) {
-            throw new AppException("No binding found for {$abstract}");
+        public function resolve(string $abstract, array $params = [])
+        {
+            // Resolve alias if it exists
+            $abstract = $this->aliases[$abstract] ?? $abstract;
+
+            // Get the concrete implementation from bindings.
+            // If not bound, we'll assume the abstract is a concrete class we can auto-wire.
+            $concrete = $this->bindings[$abstract] ?? $abstract;
+
+            if ($concrete instanceof Closure) {
+                return $concrete($this, ...$params);
+            }
+            
+            if (is_object($concrete)) {
+                return $concrete;
+            }
+
+            // If it's a string (class name), build it.
+            if (is_string($concrete)) {
+                try {
+                    return $this->build($concrete, $params);
+                } catch (AppException $e) {
+                    // Re-throw with more context
+                    throw new AppException("Failed to resolve '{$abstract}'. " . $e->getMessage());
+                }
+            }
+            
+            throw new AppException("Unresolvable dependency type for '{$abstract}'");
         }
 
-        $concrete = $this->bindings[$abstract];
-
-        if (is_callable($concrete)) {
-            return $concrete($this, ...$params);
+    public function build(string $concrete, array $params = []): object
+    {
+        try {
+            $reflector = new ReflectionClass($concrete);
+        } catch (ReflectionException $e) {
+            throw new AppException("Class {$concrete} does not exist.");
         }
 
-        if (is_string($concrete)) {
-            return $this->build($concrete, $params);
-        }
-
-        return $concrete;
-    }
-
-    public function build(string $concrete, array $params = []) {
-        $reflector = new ReflectionClass($concrete);
 
         if (!$reflector->isInstantiable()) {
             throw new AppException("Cannot instantiate {$concrete}");
@@ -167,13 +193,30 @@ class Container implements ContainerInterface {
         }
 
         $dependencies = $constructor->getParameters();
-        $resolvedParams = [];
+        $resolvedDependencies = [];
 
         foreach ($dependencies as $dependency) {
-            $resolvedParams[] = $this->resolve($dependency->getType()->getName());
+            // This allows us to pass named parameters to override DI
+            if (isset($params[$dependency->getName()])) {
+                $resolvedDependencies[] = $params[$dependency->getName()];
+                continue;
+            }
+
+            $type = $dependency->getType();
+
+            if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+                if ($dependency->isDefaultValueAvailable()) {
+                    $resolvedDependencies[] = $dependency->getDefaultValue();
+                    continue;
+                }
+                throw new AppException("Cannot resolve primitive parameter \${$dependency->getName()} in class {$concrete}");
+            }
+
+            // Recursively resolve the dependency class
+            $resolvedDependencies[] = $this->make($type->getName());
         }
 
-        return $reflector->newInstanceArgs(array_merge($resolvedParams, $params));
+        return $reflector->newInstanceArgs($resolvedDependencies);
     }
 
     public function makeCallable($handler): callable {
