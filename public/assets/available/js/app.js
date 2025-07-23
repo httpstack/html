@@ -1,28 +1,10 @@
-const root = document.getElementById('root');
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.querySelector('.hamburger-menu');
+    const nav = document.querySelector('.header-nav');
 
-const navLinks = [
-    { href: '#about', text: 'About' },
-    { href: '#projects', text: 'Projects' },
-    { href: '#contact', text: 'Contact' },
-];
-
-const socialLinks = [
-    { href: 'https://www.linkedin.com', text: 'LinkedIn', icon: 'linkedin' },
-    { href: 'https://github.com', text: 'GitHub', icon: 'github' },
-    // Add more social links as needed
-];
-const appTitle = "HttpStack.tech";
-const Header = () => {
-    return (
-        <div>
-            {appTitle}
-        </div>
-    );
-}
-const App = () => {
-    return (
-        <Header />
-    );
-};
-
-ReactDOM.render(<App />, root);
+    if (hamburger && nav) {
+        hamburger.addEventListener('click', () => {
+            nav.classList.toggle('nav-open');
+        });
+    }
+});

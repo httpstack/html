@@ -24,34 +24,23 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
      * @param string $templateName The logical name or identifier for this template's data.
      * @param array $initialData Optional initial data for the model.
      */
-    public function __construct(CRUD $datasource, string $templateName, array $initialData = [])
+    public function __construct(CRUD $datasource, array $initialData = [])
     {
         parent::__construct($datasource, $initialData);
+        // 1.)  Pass the array of assets you want URLS for to the fileloader
+        //put generated links array into bindAssets
 
-        $this->templateName = $templateName;
-    }
 
-    /**
-     * Returns the logical name of this template's data.
-     *
-     * @return string
-     */
-    public function getTemplateName(): string
-    {
-        return $this->templateName;
+ 
     }
-    public function getLinks($which){
+    public function getVariables(){
+        return $this->get('base.json');
+    }
+ 
+    protected function getLinks($which){
         return $this->getAll()['links.json'][$which];
     }
-    /**
-     * Retrieves the 'assets' array from the model's data.
-     *
-     * @return array An array of asset definitions, or an empty array if not found.
-     */
-    public function getAssets(): array
-    {
-        return $this->get('assets') ?? [];
-    }
+
 
     /**
      * Retrieves a specific asset by its name from the 'assets' array.

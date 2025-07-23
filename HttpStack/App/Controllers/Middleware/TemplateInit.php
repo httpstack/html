@@ -10,12 +10,9 @@ class TemplateInit
     protected string $template; 
     protected FileLoader $fileLoader; 
 
-    public function __construct(FileLoader $fileLoader)
+    public function __construct()
     {
-        $container = box(); 
-        
-        $this->fileLoader = $fileLoader;
-        $this->template = $this->fileLoader->findFile("base", NULL, "html");
+
     }
 
     /**
@@ -28,7 +25,8 @@ class TemplateInit
      */
     public function process($req, $res, $container)
     {
-        $html = file_get_contents($this->template);
+        $template = $container->make(Template::class);
+        $html = $template->saveHTML();
         //oopen the base template and just put the html into the body
         //$res->setHeader("MW Set Base", "base");
         $res->setBody($html);

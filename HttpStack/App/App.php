@@ -126,7 +126,7 @@ class App{
         $this->container->bind(View::class, function(Container $c) {
             // The container will now build the PageModel for you when you ask for a View.
             // This is dependency injection!
-            return new View($c->make(PageModel::class));
+            return new View();
         });
         $this->container->singleton(FileLoader::class, function (Container $c) {
 
@@ -143,13 +143,21 @@ class App{
 
             return $fl;
         });
+        $this->container->singleton(Template::class, function(Container $c){
+            $baseTemplatePath = $c->make('config')['app']['template']['baseTemplatePath'];
+            $t = new Template($c, $baseTemplatePath);
+
+        });
         // Use a singleton for the TemplateModel if its data is truly global
         $this->container->singleton(TemplateModel::class, function() {
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
-            // Notice we're injecting config values, not the container
-            $baseLayout = config("template")["baseLayout"];
-            return new TemplateModel($dataSource, "base", ["baseLayout" => $baseLayout]);
+            
+            $assetExtensions = ["js","css","woff","woff2","odt","ttf","jpg"];
+            $assets = $this->container->make(FileLoader::class)->findFilesByExtension($assetExtensions);
+            $t = new TemplateModel($dataSource,["assets" => $assets]);
+            $t->set("links", $t->getLinks("main"));
+            return $t;
         });
             
     }

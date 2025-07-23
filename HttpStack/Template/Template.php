@@ -1,11 +1,109 @@
 <?php
 namespace HttpStack\Template;
 
+use HttpStack\Traits\ProcessTemplate;
+use HttpStack\Container\Container;
+use HttpStack\IO\FileLoader;
+use HttpStack\App\Models\TemplateModel;
+
 class Template extends DOMDocument{
+    use ProcessTemplate;
     protected DOMXPath $map;
-    protected array $vars = [];
-    public function __construct(string $baseTemplate){
-        
+    protected array $variables = [];
+    protected Container $container;
+    protected TemplateModel $model;
+
+    public function __construct(Container $container, string $baseTemplatePath){
+        $this->container = $container;
+        @$this->loadHTMLFile($baseTemplatePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $this->setMap();
+        $this->model = $container->make(TemplateModel::class);
+        $this->setVars($this->model->getAll());
     }
+
+    public function setVars(array $vars){
+        $this->variables = $vars;
+    }
+
+    public function bindAssets(array $fileList){
+        
+        $head = $this->map->query("//head")[0];
+        $body = $this->map->query("//body")[0];
+
+        $imagePreloadUrls = [];
+        $required = ["jquery.js"];
+        foreach ($assets as $asset) {
+            $strType = pathinfo($asset, PATHINFO_EXTENSION);
+            $filename = pathinfo($asset, PATHINFO_BASENAME); 
+            $required = str_contains($filename, "required");
+            $src = str_replace(DOC_ROOT, "", $asset);
+            $imagesToPreload = [];
+            switch($strType){
+                case "js":
+
+                        $script = $this->createElement("script");
+                        $script->setAttribute("type", "text/javascript");
+                        if(str_contains($filename, "babel")){
+                            $script->setAttribute("type", "text/babel");
+                        }
+                        $script->setAttribute("src", $src);
+                        if($required){
+                            $head->appendChild($script);
+                        }else{
+                            $body->appendChild($script);
+                        }
+                break;
+
+                case "css":
+                    $link = $this->createElement("link");
+                    $link->setAttribute('type', 'text/css');
+                    $link->setAttribute('rel', 'stylesheet');
+                    $link ->setAttribute('href', $src);
+                    $head->appendChild($link);
+                break;
+
+                case "woff":
+                case "woff2":
+                case "otf":
+                case "ttf":
+                    $link = $this->createElement("link");
+                    $link->setAttribute("rel", "preload");
+                    $link->setAttribute("href", $src);
+                    $link->setAttribute("as", "font");
+                    $link->setAttribute("type", "font/{$strType}"); 
+                    $link->setAttribute("crossorigin", "anonymous"); // Required for font preloading
+                    $head->appendChild($link);
+                break;
+
+                case "jpg":
+                    $imagesToPreload[] = $src;
+                break;
+            }
+
+        }//foreach
+        if(!empty($imagesToPreload)){
+                $preloaderScriptContent = `
+                (function() {
+                    var imagesToPreload = " . json_encode($imagesToPreload) . ";
+                    imagesToPreload.forEach(function(url) {
+                        var img = new Image();
+                        img.src = url;
+                        // Optional: add event listeners for loaded/error if needed
+                        img.onload = function() { console.log('Preloaded: ' + url); };
+                        // img.onerror = function() { console.error('Failed to preload: ' + url); };
+                    });
+                })();
+            `;
+
+            $script = $this->createElement("script");
+            $script->nodeValue = $preloaderScriptContent; 
+            $body->appendChild($script);
+        }
+        $this->setMap();
+    }
+    public function setMap(){
+        $this->map = new DOMXPath($this);
+    }
+
 }
 ?>

@@ -13,7 +13,7 @@ class View {
     protected Template $template;
     protected TemplateModel $dataModel;
 
-    public function __construct( $dataModel){
+    public function __construct(Container $box){
         // make sure templateModel is foing the logic of preparing the model since 
         // it is the concrete model 
         //box(abstract) is a helper for $container->make(abstract);
