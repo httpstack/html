@@ -41,13 +41,14 @@ class App{
         $this->request = $this->container->make(Request::class);
         $this->response = $this->container->make(Response::class);
         $this->router = $this->container->make(Router::class);
-        
         $this->reportErrors();
         $GLOBALS["app"] = $this;
     }
+
     public function get(Route $route){
         $this->router->after($route);
     }
+
     public function loadRoutes(){
         $routesDir = $this->settings['appPaths']['routesDir'];
         $configs = [];
@@ -69,15 +70,17 @@ class App{
                     break;
                 }
             }
-        }
-        
+        }   
     }
+
     public function getSettings(){
         return $this->settings;
     }
+
     public function getContainer(){
         return $this->container;
     }
+
     public function reportErrors(){
         if($this->debug){
             ini_set("display_errors", 1);
@@ -85,8 +88,9 @@ class App{
             error_reporting(32767);// E_ALL
         }
     }
+
     public function init(){
-  // --- 1. Load Configurations and Aliases ---
+    // --- 1. Load Configurations and Aliases ---
         $this->container->singleton('config', function () {
             $configDir = APP_ROOT . "/config";
             $configs = [];
@@ -125,9 +129,9 @@ class App{
             return new View($c->make(PageModel::class));
         });
         $this->container->singleton(FileLoader::class, function (Container $c) {
+
             // We need the 'config' service to get the application settings
             $settings = $c->make('config')['app'];
-
             $fl = new FileLoader();
 
             // Loop over the appPaths and map them, just like in your original code
