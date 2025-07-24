@@ -1,5 +1,5 @@
 <?php
-
+namespace HttpStack\Traits;
 trait ProcessTemplate{
 
     /**

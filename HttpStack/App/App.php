@@ -2,12 +2,13 @@
 namespace HttpStack\App;
 
 use DBTable;
-use Dev\Template\Template;
 use HttpStack\Http\Request;
 use HttpStack\Http\Response;
 use HttpStack\IO\FileLoader;
 use HttpStack\Routing\Route;
+use HttpStack\App\Views\View;
 use HttpStack\Routing\Router;
+use HttpStack\Template\Template;
 use HttpStack\DataBase\DBConnect;
 use HttpStack\Container\Container;
 use HttpStack\DocEngine\DocEngine;
@@ -16,7 +17,6 @@ use HttpStack\App\Models\TemplateModel;
 use HttpStack\Datasource\FileDatasource;
 use HttpStack\App\Datasources\DB\ActiveTable;
 use HttpStack\App\Datasources\FS\JsonDirectory;
-use HttpStack\App\Views\View;
 
 class App{
     protected Container $container;
@@ -32,6 +32,7 @@ class App{
         // Bind the essential instances FIRST
         $this->container->singleton(Container::class, $this->container);
         $this->container->singleton(self::class, $this);
+        $this->container->singleton(App::class, $this);
 
         // INIT will bind all other services to the container
         $this->init();
@@ -143,9 +144,8 @@ class App{
 
             return $fl;
         });
-        $this->container->singleton(Template::class, function(Container $c){
-            $baseTemplatePath = $c->make('config')['app']['template']['baseTemplatePath'];
-            $t = new Template($c, $baseTemplatePath);
+        $this->container->singleton("template", function(){
+           return new Template("/var/www/html/HttpStack/App/Views/templates/base.html");
 
         });
         // Use a singleton for the TemplateModel if its data is truly global
@@ -156,7 +156,7 @@ class App{
             $assetExtensions = ["js","css","woff","woff2","odt","ttf","jpg"];
             $assets = $this->container->make(FileLoader::class)->findFilesByExtension($assetExtensions);
             $t = new TemplateModel($dataSource,["assets" => $assets]);
-            $t->set("links", $t->getLinks("main"));
+            //$t->set("links", $t->getLinks("main"));
             return $t;
         });
             

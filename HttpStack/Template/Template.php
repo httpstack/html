@@ -1,23 +1,26 @@
 <?php
 namespace HttpStack\Template;
 
-use HttpStack\Traits\ProcessTemplate;
-use HttpStack\Container\Container;
+use DOMPXath;
+use DOMDocument;
 use HttpStack\IO\FileLoader;
+use HttpStack\Container\Container;
+use HttpStack\Traits\ProcessTemplate;
 use HttpStack\App\Models\TemplateModel;
 
 class Template extends DOMDocument{
     use ProcessTemplate;
-    protected DOMXPath $map;
+    protected \DOMXPath $map;
     protected array $variables = [];
     protected Container $container;
     protected TemplateModel $model;
 
-    public function __construct(Container $container, string $baseTemplatePath){
-        $this->container = $container;
-        @$this->loadHTMLFile($baseTemplatePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    public function __construct(string $baseTemplatePath){
+
+        $baseTemplatePath = app()->getSettings()['template']['baseTemplatePath'];
+        @$this->loadHTMLFile(APP_ROOT . "/Views/templates/base.html", LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $this->setMap();
-        $this->model = $container->make(TemplateModel::class);
+        $this->model = box(TemplateModel::class);
         $this->setVars($this->model->getAll());
     }
 
@@ -102,7 +105,7 @@ class Template extends DOMDocument{
         $this->setMap();
     }
     public function setMap(){
-        $this->map = new DOMXPath($this);
+        $this->map = new \DOMXPath($this);
     }
 
 }

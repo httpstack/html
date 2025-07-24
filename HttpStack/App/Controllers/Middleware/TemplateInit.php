@@ -1,13 +1,13 @@
 <?php
 namespace HttpStack\App\Controllers\Middleware;
 
-use Dev\Template\Template; 
 use HttpStack\IO\FileLoader; 
-use HttpStack\App\Views\View;
+use HttpStack\App\Views\View; 
+use HttpStack\Template\Template;
 
 class TemplateInit
 {
-    protected string $template; 
+    protected Template $template; 
     protected FileLoader $fileLoader; 
 
     public function __construct()
@@ -25,8 +25,10 @@ class TemplateInit
      */
     public function process($req, $res, $container)
     {
-        $template = $container->make(Template::class);
+        $template = $container->make("template");
         $html = $template->saveHTML();
+        //var_dump($template);
+        //$html = $template->saveHTML();
         //oopen the base template and just put the html into the body
         //$res->setHeader("MW Set Base", "base");
         $res->setBody($html);
