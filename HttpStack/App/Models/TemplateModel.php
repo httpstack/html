@@ -29,15 +29,19 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
         parent::__construct($datasource, $initialData);
         // 1.)  Pass the array of assets you want URLS for to the fileloader
         //put generated links array into bindAssets
-
-
- 
+        $temp = [];
+        $temp['links'] = $this->getLinks("main");
+        foreach($this->getVariables() as $key => $value){
+            $temp[$key] = $value;
+        }
+        
+        $this->setAll($temp);
     }
     public function getVariables(){
         return $this->get('base.json');
     }
  
-    protected function getLinks($which){
+    public function getLinks($which){
         return $this->getAll()['links.json'][$which];
     }
 

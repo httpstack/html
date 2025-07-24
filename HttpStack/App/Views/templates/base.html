@@ -5,11 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTTpsTACK</title>
-    <script src="/public/assets/enabled/vendor/js/required-jquery.js"></script>
-    <link rel="stylesheet" href="/public/assets/enabled/css/style.css" />
-    <link rel="stylesheet" href="/public/assets/enabled/vendor/css/bootstrap.css" />
-    <link rel="stylesheet" href="/public/assets/enabled/vendor/css/bootstrap-icons.css" />
-    <link rel="stylesheet" href="/public/assets/enabled/css/style.css" />
+
+
 </head>
 
 <body>
@@ -20,8 +17,8 @@
                     <i class="bi bi-gem animated-icon"></i>
 
                 </span>
-                <span class="brand-title">HttPStaCK</span>
-                <span class="brand-slogan"><sub>whats in your stack?</sub></span>
+                <span class="brand-title">{{appName}}</span>
+                <span class="brand-slogan"><sub>{{appSlogan}}</sub></span>
             </div>
             <button class="hamburger-menu" aria-label="Toggle navigation">
                 <i class="bi bi-list"></i>
@@ -29,16 +26,7 @@
             <nav class="header-nav nav-closed">
                 <ul class="nav-list" data-repeat="links as link">
                     <li class="nav-item" data-repeat-item="link">
-                        <a href="/home" class="nav-link">Home</a>
-                    </li>
-                    <li class="nav-item" data-repeat-item="link">
-                        <a href="/resume" class="nav-link">Resume</a>
-                    </li>
-                    <li class="nav-item" data-repeat-item="link">
-                        <a href="/services" class="nav-link">Services</a>
-                    </li>
-                    <li class="nav-item" data-repeat-item="link">
-                        <a href="/projects" class="nav-link">Projects</a>
+                        <a href="link[uri]" class="nav-link">link[label]</a>
                     </li>
                 </ul>
             </nav>
@@ -82,11 +70,13 @@
         $(document).ready(function () {
             // Hamburger menu functionality
             const $hamburger = $('.hamburger-menu');
+            console.log($hamburger);
             const $nav = $('.header-nav');
 
             $hamburger.on('click', function () {
                 $nav.toggleClass('.nav-open');
             });
+
         });
     </script>
 </body>

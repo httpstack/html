@@ -145,18 +145,17 @@ class App{
             return $fl;
         });
         $this->container->singleton("template", function(){
-           return new Template("/var/www/html/HttpStack/App/Views/templates/base.html");
-
+            $tm = $this->container->make(TemplateModel::class);
+            $fl = $this->container->make(FileLoader::class);
+            $baseTemplatePath = $fl->findFile("base.html", null, "html");
+            return new Template($baseTemplatePath, $tm);
         });
         // Use a singleton for the TemplateModel if its data is truly global
         $this->container->singleton(TemplateModel::class, function() {
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
             
-            $assetExtensions = ["js","css","woff","woff2","odt","ttf","jpg"];
-            $assets = $this->container->make(FileLoader::class)->findFilesByExtension($assetExtensions);
-            $t = new TemplateModel($dataSource,["assets" => $assets]);
-            //$t->set("links", $t->getLinks("main"));
+            $t = new TemplateModel($dataSource);
             return $t;
         });
             

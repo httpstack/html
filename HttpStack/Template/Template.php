@@ -15,20 +15,20 @@ class Template extends DOMDocument{
     protected Container $container;
     protected TemplateModel $model;
 
-    public function __construct(string $baseTemplatePath){
+    public function __construct(string $baseTemplatePath,  TemplateModel $tm){
 
-        $baseTemplatePath = app()->getSettings()['template']['baseTemplatePath'];
-        @$this->loadHTMLFile(APP_ROOT . "/Views/templates/base.html", LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        //$baseTemplatePath = app()->getSettings()['template']['baseTemplatePath'];
+
+        @$this->loadHTMLFile($baseTemplatePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $this->setMap();
-        $this->model = box(TemplateModel::class);
-        $this->setVars($this->model->getAll());
+        $this->setVars($tm->getAll());
     }
 
     public function setVars(array $vars){
         $this->variables = $vars;
     }
 
-    public function bindAssets(array $fileList){
+    public function bindAssets(array $assets){
         
         $head = $this->map->query("//head")[0];
         $body = $this->map->query("//body")[0];
@@ -51,11 +51,16 @@ class Template extends DOMDocument{
                         }
                         $script->setAttribute("src", $src);
                         if($required){
-                            $head->appendChild($script);
+                            $head->appendChild($script); 
                         }else{
                             $body->appendChild($script);
                         }
                 break;
+
+                case "jsx":
+                    $script = $this->createElement("script");
+                    $script->setAttribute("type", "text/babel");
+                    $script->setAttribute("src", $src);
 
                 case "css":
                     $link = $this->createElement("link");
@@ -107,6 +112,5 @@ class Template extends DOMDocument{
     public function setMap(){
         $this->map = new \DOMXPath($this);
     }
-
 }
 ?>

@@ -25,8 +25,14 @@ class TemplateInit
      */
     public function process($req, $res, $container)
     {
+        $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
         $template = $container->make("template");
-        $html = $template->saveHTML();
+        $fl = $container->make(FileLoader::class);
+        $assets = $fl->findFilesByExtension($assetTypes, null);
+        $template->bindAssets($assets);     
+
+
+        $html = $template->render();
         //var_dump($template);
         //$html = $template->saveHTML();
         //oopen the base template and just put the html into the body

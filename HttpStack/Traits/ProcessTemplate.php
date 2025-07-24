@@ -1,5 +1,8 @@
 <?php
 namespace HttpStack\Traits;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 trait ProcessTemplate{
 
     /**
@@ -7,19 +10,12 @@ trait ProcessTemplate{
      */
     public function render(): string
     {
-        // IMPORTANT: Start with the raw templateContent string if DOMDocument hasn't been used,
-        // otherwise use the current state of the DOMDocument.
-        $output = '';
-        if ($this->domDocument instanceof DOMDocument) {
-            $output = $this->domDocument->saveHTML();
-        } else {
-            $output = $this->templateContent;
-        }
+
 
         // --- Step 1: Process data-repeat loops using DOMXPath ---
         // This part remains the same as it operates on the DOM structure.
          // Ensure DOM is loaded for XPath queries
-        $this->map = $this->getXPath($this);
+        $this->map = new DOMXPath($this);
         $repeatElements = $this->map->query("//*[@data-repeat]");
 
         // We need to iterate over a static list of elements because modifying the DOM
@@ -131,21 +127,25 @@ trait ProcessTemplate{
     /**
      * Replaces placeholders like 'item[key]' in a string.
      */
-    protected function replaceDataAttributePlaceholders(string $content, string $itemVarName, array|object $itemData): string
-    {
-        // Regex to match 'item[key]' pattern
-        $pattern = '/' . preg_quote($itemVarName) . '\[([a-zA-Z0-9_]+)\]/';
+protected function replaceDataAttributePlaceholders(string $content, string $itemVarName, array|object $itemData): string
+{
+    //echo("\nProcessing content: " . $content . " for item: " . $itemVarName); // Add this
+    $pattern = '/' . preg_quote($itemVarName) . '\[([a-zA-Z0-9_]+)\]/';
 
-        return preg_replace_callback($pattern, function($matches) use ($itemData) {
-            $key = $matches[1];
-            if (is_array($itemData) && isset($itemData[$key])) {
-                return (string)$itemData[$key];
-            } elseif (is_object($itemData) && property_exists($itemData, $key)) {
-                return (string)$itemData->$key;
-            }
-            return $matches[0]; // Return original if not found
-        }, $content);
-    }
+    return preg_replace_callback($pattern, function($matches) use ($itemData) {
+        $key = $matches[1];
+        //echo("\nMatched key: " . $key); // Add this
+        if (is_array($itemData) && isset($itemData[$key])) {
+            //echo("\nFound array data for key " . $key . ": " . $itemData[$key]); // Add this
+            return (string)$itemData[$key];
+        } elseif (is_object($itemData) && property_exists($itemData, $key)) {
+            //echo("\nFound object data for key " . $key . ": " . $itemData->$key); // Add this
+            return (string)$itemData->$key;
+        }
+        //echo("\nKey " . $key . " not found in data. Returning original: " . $matches[0]); // Add this
+        return $matches[0]; // Return original if not found
+    }, $content);
+}
 
 
     /**
@@ -154,7 +154,10 @@ trait ProcessTemplate{
      */
     protected function replaceSimpleVariables(string $content, array $variables): string
     {
+        //var_dump($variables);
         foreach ($variables as $key => $value) {
+            //dd($key);
+            //dd($value);
             if (is_string($value) || is_numeric($value) || is_bool($value) || is_null($value)) {
                 $content = str_replace('{{' . $key . '}}', (string)$value, $content);
             }
@@ -217,7 +220,7 @@ trait ProcessTemplate{
                     return (string)$result; // Return the result as a string
                 } catch (\Exception $e) {
                     // Handle errors during function execution (e.g., log, return empty string)
-                    error_log("Template function '{$functionName}' failed: " . $e->getMessage());
+                    echo("\nTemplate function '{$functionName}' failed: " . $e->getMessage());
                     return ''; // Or return an error message placeholder
                 }
             }
