@@ -33,6 +33,9 @@ class TemplateInit
 
 
         $html = $template->render();
+        $container->singleton('template' function() use($template){
+          return $template; 
+        });
         //var_dump($template);
         //$html = $template->saveHTML();
         //oopen the base template and just put the html into the body
