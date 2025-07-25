@@ -1,9 +1,12 @@
 <?php
 namespace HttpStack\App\Controllers\Middleware;
 
-use HttpStack\IO\FileLoader; 
-use HttpStack\App\Views\View; 
+use HttpStack\Http\Request; 
+use HttpStack\Http\Response; 
+use HttpStack\IO\FileLoader;
+use HttpStack\App\Views\View;
 use HttpStack\Template\Template;
+use HttpStack\Container\Container;
 
 class TemplateInit
 {
@@ -23,23 +26,24 @@ class TemplateInit
      * @param mixed $container The dependency injection container.
      * @return void
      */
-    public function process($req, $res, $container)
+    public function process(Request $req, Response $res, Container $container)
     {
-        $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
-        $template = $container->make("template");
-        $fl = $container->make(FileLoader::class);
-        $assets = $fl->findFilesByExtension($assetTypes, null);
-        $template->bindAssets($assets);     
-
-
-        $html = $template->render();
-        $container->singleton('template' function() use($template){
-          return $template; 
+        $v = new View($req, $res, $container);
+        //register the view namespace agian, returning this view
+        // that has the template object within it.
+        $container->singleton("view", function(Container $c, string $route) use($v){
+          $v->setRoute($route);
+          return $v;
         });
+
+
+
+        //$html = $template->render();
+
         //var_dump($template);
         //$html = $template->saveHTML();
         //oopen the base template and just put the html into the body
         //$res->setHeader("MW Set Base", "base");
-        $res->setBody($html);
+        //$res->setBody();
     }//pub
 }

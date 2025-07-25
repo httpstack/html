@@ -1,40 +1,44 @@
 <?php
 namespace HttpStack\App\Views;
 
-use Dev\Template\Template;
 use HttpStack\Http\Request;
 use HttpStack\Http\Response;
-use HtppStack\Container\Container;
-use HttpStack\App\Models\TemplateModel;
+use HttpStack\IO\FileLoader;
+use HttpStack\Template\Template;
+use HttpStack\Container\Container;
 use HttpStack\Model\AbstractModel;
+use HttpStack\App\Models\TemplateModel;
 
 class View {
 
     protected Template $template;
-    protected TemplateModel $dataModel;
+    protected string $route;
 
-    public function __construct(Container $box){
+    public function __construct(Request $req, Response $res, Container $container){
         // make sure templateModel is foing the logic of preparing the model since 
         // it is the concrete model 
         //box(abstract) is a helper for $container->make(abstract);
-        $this->template = box("template");
-        $dataModel = box("template.model");
-        $this->template->load($dataModel->get("baseTemplatePath"));
-        $assets = $dataModel->get("assets");
-
+        $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
+        $this->template = $container->make("template");
+        $fl = $container->make(FileLoader::class);
+        $assets = $fl->findFilesByExtension($assetTypes, null);
         $this->template->bindAssets($assets);
-        $this->template->setVariables($dataModel->getAll()['base.json']);
-        //the template will be using data- the template will be itterating
-        // a "links" array
-        $this->template->setVariables(["links" => $dataModel->getLinks("main")]);
-
-
+        /*
         //example of defining a function with parameter
         $this->template->define("myFunc", function($myparam){
             return $myparam;
         });
+        */
     }
-
+    public function setRoute(string $route){
+        $this->route = $route;
+    }
+    public function getRoute(){
+        return $this->route;
+    }
+    public function getTemplate(){
+        return $this->template;
+    }
     public function importView(string $filePath){
         $this->template->importView($filePath);
     }

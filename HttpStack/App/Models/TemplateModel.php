@@ -47,31 +47,23 @@ class TemplateModel extends AbstractModel implements Stringable // Added Stringa
 
 
     /**
-     * Retrieves a specific asset by its name from the 'assets' array.
-     *
-     * @param string $assetName The name of the asset to retrieve.
-     * @return array|null The asset definition array, or null if not found.
-     */
-    public function getAsset(string $assetName): ?array
-    {
-        $assets = $this->getAssets();
-        foreach ($assets as $asset) {
-            if (isset($asset['name']) && $asset['name'] === $assetName) {
-                return $asset;
-            }
-        }
-        return null;
-    }
-
-
-
-    /**
      * String representation of the TemplateModel.
      *
      * @return string
      */
+    protected function processArray($a){
+        $str = "";
+        foreach($a as $k => $v){
+            if(is_array($v)){
+                $str .= $this->processArray($v);
+            }else{
+                $str .= "Key: $k Value: $v \n<br/>";
+            }
+        }
+        return $str;
+    }
     public function __toString(): string
     {
-        return "TemplateModel: " . $this->getTemplateName() . " (ID: " . ($this->get('id') ?? 'N/A') . ")";
+        return $this->processArray($this->getAll());
     }
 }
