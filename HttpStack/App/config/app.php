@@ -12,6 +12,7 @@ $settings = [
         "dataDir" => APP_ROOT . "/data",
         "viewsDir" => APP_ROOT . "/Views/routes",
         "templatesDir" => APP_ROOT . "/Views/templates",
+        "routeViewsDir" => APP_ROOT . "/Views/routes",
         "vendorAssetsDir" => DOC_ROOT . "/public/assets/enabled/vendor",
         "assetsDir" => DOC_ROOT . "/public/assets/enabled",
         "routesDir" => APP_ROOT . "/routes"

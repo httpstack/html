@@ -1,6 +1,8 @@
 <?php
 namespace HttpStack\App\Views;
 
+
+use \DocumentFragment;
 use HttpStack\Http\Request;
 use HttpStack\Http\Response;
 use HttpStack\IO\FileLoader;
@@ -12,12 +14,14 @@ use HttpStack\App\Models\TemplateModel;
 class View {
 
     protected Template $template;
-    protected string $route;
+    protected string $view;
+    protected Container $container;
 
     public function __construct(Request $req, Response $res, Container $container){
         // make sure templateModel is foing the logic of preparing the model since 
         // it is the concrete model 
         //box(abstract) is a helper for $container->make(abstract);
+        $this->container = $container;
         $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
         $this->template = $container->make("template");
         $fl = $container->make(FileLoader::class);
@@ -30,11 +34,26 @@ class View {
         });
         */
     }
-    public function setRoute(string $route){
-        $this->route = $route;
+    public function objectifyView($view){
+        $fl = $this->container->make(FileLoader::class);
+        $viewPath = $fl->findFile($view, "routeViewsDir", "html");
+        $htmView = $fl->readFile($view);
+        $frag = $this->template->createDocumentFragment();
+        $frag->append($htmView);        
+        $d = new \DOMDocument();
+        libxml_get_errors();
+        @$d->loadHTML($htmView);
+        libxml_clear_errors();
+        $d->append($frag);
+        
+        return $frag;
     }
-    public function getRoute(){
-        return $this->route;
+    public function setView(string $view){
+        $viewNode = $this->objectifyView($view);
+
+    }
+    public function getView(){
+        return $this->view;
     }
     public function getTemplate(){
         return $this->template;

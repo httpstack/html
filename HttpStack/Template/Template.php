@@ -109,6 +109,10 @@ class Template extends DOMDocument{
         }
         $this->setMap();
     }
+    public function insertView($viewFragment){
+        $target = $this->map->query("//*[@data-key='view']");
+        $target->append($viewFragment);
+    }
     public function setMap(){
         $this->map = new \DOMXPath($this);
     }

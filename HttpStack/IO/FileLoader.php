@@ -71,48 +71,55 @@ class FileLoader
     /**
      * Find a file by name in mapped directories (searches subdirectories).
      */
-public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
-{
-    // Use default extension if not supplied
-    $extension = $extension ?? $this->defaultExtension;
+    public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
+    {
+        // Use default extension if not supplied
+        $extension = $extension ?? $this->defaultExtension;
 
-    // Only add extension if not already present
-    if (!empty($extension) && !pathinfo($name, PATHINFO_EXTENSION)) {
-        $name .= '.' . ltrim($extension, '.');
-    }
+        // Only add extension if not already present
+        if (!empty($extension) && !pathinfo($name, PATHINFO_EXTENSION)) {
+            $name .= '.' . ltrim($extension, '.');
+        }
 
-    // If a directory is specified, search only there
-    if ($directory !== null) {
-        $dir = $this->mappedDirectories[$directory] ?? $directory;
+        // Normalize the search name to use forward slashes for consistency
+        $normalizedName = str_replace('\\', '/', $name);
 
-        if (is_dir($dir)) {
-            // Updated to use scanDirectoryForExtensions for consistency
-            $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
-            foreach ($files as $file) {
-                if (basename($file) === $name) {
-                    return $file;
+        // If a directory is specified, search only there
+        if ($directory !== null) {
+            $dir = $this->mappedDirectories[$directory] ?? $directory;
+
+            if (is_dir($dir)) {
+                $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
+                foreach ($files as $file) {
+                    // Normalize the file path relative to the base directory for comparison
+                    $relativePath = str_replace('\\', '/', substr($file, strlen($dir) + 1));
+
+                    // Check if the relative path ends with the normalized search name
+                    if ($relativePath === $normalizedName || basename($file) === $normalizedName) {
+                        return $file;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // If no directory specified, search all mapped directories
+        foreach ($this->mappedDirectories as $dir) {
+            if (is_dir($dir)) {
+                $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
+                foreach ($files as $file) {
+                    // Normalize the file path relative to the base directory for comparison
+                    $relativePath = str_replace('\\', '/', substr($file, strlen($dir) + 1));
+
+                    // Check if the relative path ends with the normalized search name
+                    if ($relativePath === $normalizedName || basename($file) === $normalizedName) {
+                        return $file;
+                    }
                 }
             }
         }
-
         return null;
     }
-
-    // If no directory specified, search all mapped directories
-    foreach ($this->mappedDirectories as $dir) {
-        if (is_dir($dir)) {
-            // Updated to use scanDirectoryForExtensions for consistency
-            $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
-            foreach ($files as $file) {
-                if (basename($file) === $name) {
-                    return $file;
-                }
-            }
-        }
-    }
-
-    return null;
-}
 
     /**
      * Find all files by extension(s) in mapped directories.
@@ -120,37 +127,24 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
      * @param string|array $extensions A single extension string or an array of extensions.
      * @param string|array|null $directories Optional. A single directory name, an array of directory names, or null for all mapped directories.
      */
-    public function findFilesByExtension(string|array $extensions, string|array|null $directories = null): array
+    public function findFilesByExtension(array $extensions, ?string $directory = null): array
     {
-        $files = [];
-
-        // Ensure extensions is always an array
-        $extensions = (array) $extensions;
-
-        $dirsToScan = [];
-        if ($directories !== null) {
-            $directories = (array) $directories; // Ensure it's an array if not null
-            foreach ($directories as $dirName) {
-                $dirPath = $this->mappedDirectories[$dirName] ?? $dirName;
-                if (is_dir($dirPath)) {
-                    $dirsToScan[] = $dirPath;
-                }
+        $foundFiles = [];
+        if ($directory !== null) {
+            $dir = $this->mappedDirectories[$directory] ?? $directory;
+            if (is_dir($dir)) {
+                $foundFiles = array_merge($foundFiles, $this->scanDirectoryForExtensions($dir, $extensions));
             }
         } else {
-            // If no specific directories provided, scan all mapped directories
-            $dirsToScan = array_values($this->mappedDirectories);
-        }
-
-        foreach ($dirsToScan as $dir) {
-            if (is_dir($dir)) {
-                $dirFiles = $this->scanDirectoryForExtensions($dir, $extensions);
-                $files = array_merge($files, $dirFiles);
+            foreach ($this->mappedDirectories as $dir) {
+                if (is_dir($dir)) {
+                    $foundFiles = array_merge($foundFiles, $this->scanDirectoryForExtensions($dir, $extensions));
+                }
             }
         }
-
-        // Normalize the array to remove duplicates from scanning multiple directories
-        return array_unique($files);
+        return array_unique($foundFiles);
     }
+
 
     /**
      * Scan a directory for files with specific extensions.
@@ -161,29 +155,21 @@ public function findFile(string $name, ?string $directory = null, ?string $exten
      */
     protected function scanDirectoryForExtensions(string $directory, array $extensions): array
     {
-        $files = [];
-        // Normalize extensions by removing leading dots
-        $normalizedExtensions = array_map(fn($ext) => ltrim($ext, '.'), $extensions);
+        $foundFiles = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
 
-        try {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator(
-                    $directory,
-                    \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS
-                )
-            );
-
-            foreach ($iterator as $file) {
-                if ($file->isFile() && in_array($file->getExtension(), $normalizedExtensions)) {
-                    $files[] = $file->getPathname();
+        foreach ($iterator as $file) {
+            if ($file->isFile()) {
+                $fileExtension = pathinfo($file->getFilename(), PATHINFO_EXTENSION);
+                if (in_array($fileExtension, $extensions)) {
+                    $foundFiles[] = $file->getPathname();
                 }
             }
-        } catch (\Exception $e) {
-            // Directory may not exist or be accessible, log or handle as appropriate
-            // For now, we'll just return an empty array silently as per original behavior.
         }
-
-        return $files;
+        return $foundFiles;
     }
 
 

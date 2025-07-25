@@ -31,8 +31,8 @@ class TemplateInit
         $v = new View($req, $res, $container);
         //register the view namespace agian, returning this view
         // that has the template object within it.
-        $container->singleton("view", function(Container $c, string $route) use($v){
-          $v->setRoute($route);
+        $container->singleton("view", function(Container $c, string $view) use($v){
+          $v->setView($view);
           return $v;
         });
 
