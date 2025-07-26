@@ -1,7 +1,7 @@
 <?php
 namespace HttpStack\Template;
 
-use DOMPXath;
+use \DOMPXath;
 use DOMDocument;
 use HttpStack\IO\FileLoader;
 use HttpStack\Container\Container;
@@ -115,6 +115,9 @@ class Template extends DOMDocument{
     }
     public function setMap(){
         $this->map = new \DOMXPath($this);
+    }
+    public function getMap(){
+        return $this->map;
     }
 }
 ?>

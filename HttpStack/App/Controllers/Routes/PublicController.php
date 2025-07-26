@@ -15,11 +15,9 @@ class PublicController{
         //if not no biggie
     }
     public function index(Request $req, Response $res, Container $container, $matches){
-        $res->setContentType("text/html");
+        
         $v = $container->make("view", "public/home");
-        $html = null;
-        var_dump($v->getView());
-        //$res->setBody($html);
+        $v->render();
         if(!$res->sent){
             $res->send();
         }   

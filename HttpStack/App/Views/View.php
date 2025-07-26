@@ -14,6 +14,7 @@ use HttpStack\App\Models\TemplateModel;
 class View {
 
     protected Template $template;
+    protected Response $response;
     protected string $view;
     protected Container $container;
 
@@ -22,6 +23,7 @@ class View {
         // it is the concrete model 
         //box(abstract) is a helper for $container->make(abstract);
         $this->container = $container;
+        $this->response = $res;
         $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
         $this->template = $container->make("template");
         $fl = $container->make(FileLoader::class);
@@ -34,23 +36,27 @@ class View {
         });
         */
     }
-    public function objectifyView($view){
+    public function loadView(string $filePath){
         $fl = $this->container->make(FileLoader::class);
-        $viewPath = $fl->findFile($view, "routeViewsDir", "html");
-        $htmView = $fl->readFile($view);
+        $fileContent = $fl->readFile($filePath);
+        $viewNode = $this->toDomObject($fileContent);
         $frag = $this->template->createDocumentFragment();
-        $frag->append($htmView);        
-        $d = new \DOMDocument();
-        libxml_get_errors();
-        @$d->loadHTML($htmView);
-        libxml_clear_errors();
-        $d->append($frag);
-        
-        return $frag;
+        foreach (iterator_to_array($viewNode->childNodes) as $childNode) {
+            $importedNode = $this->template->importNode($childNode, true); // true for deep clone
+            $frag->appendChild($importedNode);
+        }
+        $targetNode = $this->template->getMap()->query('//*[@data-key="view"]')->item(0);
+        $targetNode->appendChild($frag);
     }
-    public function setView(string $view){
-        $viewNode = $this->objectifyView($view);
+    protected function toDomObject($str){
+        $dom = new \DOMDocument();
+        $dom->loadHTML($str, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        return $dom;
+    }
 
+    public function render(){
+        $html = $this->template->render();
+        $this->response->setContentType("text/html")->setBody($html);
     }
     public function getView(){
         return $this->view;

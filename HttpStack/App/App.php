@@ -25,7 +25,7 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = true;
+    public bool $debug = false;
     public function __construct(string $appPath = "/var/www/html/App/app") {
         $this->container = new Container();
 
@@ -123,12 +123,6 @@ class App{
             return new PageModel($dbDatasource);
         });
 
-        // Use `bind` because a View is also specific to a request
-        $this->container->bind(View::class, function(Container $c) {
-            // The container will now build the PageModel for you when you ask for a View.
-            // This is dependency injection!
-            return new View();
-        });
         $this->container->singleton(FileLoader::class, function (Container $c) {
 
             // We need the 'config' service to get the application settings
