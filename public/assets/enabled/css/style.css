@@ -3,25 +3,25 @@
     /* Base Font Size */
     --font-size: 14px;
     --font-size-rem: calc(var(--font-size) / 16 * 1rem); /* Normalize px to rem */
-    --default-font: 'Segoe UI', sans-serif;
+    --default-font: 'Inter', sans-serif; /* Changed to Inter as per instructions */
     --app-frame-width: 90%; /* Default width for app frame, overridden by media queries */
 
     /* Light Theme Color Palette (Default) */
-    --theme-primary: #7d3c98; /* Deep Violet - main branding color */
-    --theme-accent-1: #f39c12; /* Vibrant Orange-Yellow - for links, CTAs */
-    --theme-accent-2: #80c05a; /* Fresh Green-Yellow - for highlights, checkmarks */
+    --theme-primary: #6a0572; /* Deeper Violet - main branding color */
+    --theme-accent-1: #e67e22; /* Rich Orange - for links, CTAs */
+    --theme-accent-2: #27ae60; /* Emerald Green - for highlights, checkmarks */
 
-    --theme-text-main: #34495e; /* Default text color for body/cards */
-    --theme-text-light: #ecf0f1; /* Text on dark backgrounds (header/footer) */
-    --theme-text-darker: #212529; /* A darker text variant if needed */
+    --theme-text-main: #2c3e50; /* Darker text color for body/cards */
+    --theme-text-light: #f8f9fa; /* Text on dark backgrounds (header/footer) */
+    --theme-text-darker: #1a1a1a; /* A darker text variant if needed */
 
-    --theme-bg-body: #ecf0f1; /* Overall page background */
-    --theme-bg-card: #ffffff; /* Main content card background */
-    --theme-bg-header-footer: #2c3e50; /* Header and footer background */
+    --theme-bg-body: #f0f4f7; /* Light grey-blue for overall page background */
+    --theme-bg-card: #ffffff; /* Pure white for main content card background */
+    --theme-bg-header-footer: #34495e; /* Dark blue-grey for header and footer background */
 
-    --theme-border-subtle: rgba(0, 0, 0, 0.1); /* Subtle border color */
+    --theme-border-subtle: rgba(0, 0, 0, 0.12); /* Slightly stronger subtle border color */
     --theme-shadow-light: rgba(0, 0, 0, 0.1); /* Lighter shadow for inner elements */
-    --theme-shadow-medium: rgba(0, 0, 0, 0.2); /* Stronger shadow for cards */
+    --theme-shadow-medium: rgba(0, 0, 0, 0.25); /* Stronger shadow for cards */
 
     /* Hero Section specific gradients (light mode) */
     --theme-hero-gradient-start: var(--theme-primary);
@@ -37,25 +37,25 @@
 
 /* --- Dark Theme Variables (Overrides for html[data-theme="dark"]) --- */
 html[data-theme="dark"] {
-    --theme-primary: #a367c0; /* Lighter violet for dark mode */
-    --theme-accent-1: #f7b731; /* Slightly brighter orange-yellow */
-    --theme-accent-2: #9fd27c; /* Slightly brighter green-yellow */
+    --theme-primary: #bb86fc; /* Lighter, vibrant violet for dark mode */
+    --theme-accent-1: #ffab40; /* Brighter orange-yellow */
+    --theme-accent-2: #69f0ae; /* Brighter green-yellow */
 
-    --theme-text-main: #ecf0f1; /* Light text for dark backgrounds */
-    --theme-text-light: #f0f8ff; /* Even lighter text on dark backgrounds */
+    --theme-text-main: #e0e0e0; /* Light text for dark backgrounds */
+    --theme-text-light: #f0f0f0; /* Even lighter text on dark backgrounds */
     --theme-text-darker: #cccccc; /* Adjusted for dark mode */
 
-    --theme-bg-body: #242424; /* Very dark grey for overall body */
-    --theme-bg-card: #333333; /* Dark grey for the main content card */
-    --theme-bg-header-footer: #1c2730; /* Even darker blue-grey */
+    --theme-bg-body: #121212; /* Very dark grey for overall body */
+    --theme-bg-card: #1e1e1e; /* Dark grey for the main content card */
+    --theme-bg-header-footer: #212121; /* Even darker blue-grey */
 
-    --theme-border-subtle: rgba(255, 255, 255, 0.1); /* Lighter border for dark mode */
-    --theme-shadow-light: rgba(0, 0, 0, 0.3); /* Shadows can be more pronounced on dark */
-    --theme-shadow-medium: rgba(0, 0, 0, 0.5);
+    --theme-border-subtle: rgba(255, 255, 255, 0.15); /* Lighter border for dark mode */
+    --theme-shadow-light: rgba(0, 0, 0, 0.4); /* Shadows can be more pronounced on dark */
+    --theme-shadow-medium: rgba(0, 0, 0, 0.6);
 
     /* Hero Section specific gradients (dark mode) */
-    --theme-hero-gradient-start: #1a0033; /* Darker primary for hero */
-    --theme-hero-gradient-end: #3d0066; /* Darker accent for hero */
+    --theme-hero-gradient-start: #3a004a; /* Darker primary for hero */
+    --theme-hero-gradient-end: #5a2c00; /* Darker accent for hero */
 
     /* Theme Toggle Icon Colors (for dark mode) */
     --theme-icon-sun-color: rgba(255, 255, 255, 0); /* Sun hidden in dark mode */
@@ -342,6 +342,7 @@ html[data-theme="dark"] .theme-icon-moon {
     transform: scale(1.1);
 }
 
+
 /* --- Navigation Links --- */
 .header-nav {
     position: absolute; /* Position off-screen by default */
@@ -435,10 +436,12 @@ html[data-theme="dark"] .theme-icon-moon {
     .nav-list {
         display: flex;
         gap: 1.5rem;
+        list-style: none;
         width: auto;
     }
     .nav-item {
         padding: 0;
+        list-style: none;
     }
     .nav-link {
         color: var(--theme-text-light); /* Links remain light on dark header */
@@ -544,7 +547,7 @@ html[data-theme="dark"] .theme-icon-moon {
     75% { transform: translate(-20px, -10px) scale(0.95); border-radius: 30% 70% 50% 50% / 50% 70% 30% 50%; }
     100% { transform: translate(0, 0) scale(1); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
 }
-/*  */
+/* */
 
 
 /* --- Entrance Animations for Hero Content --- */
@@ -620,6 +623,67 @@ html[data-theme="dark"] .theme-icon-moon {
     transition: color 0.3s ease;
 }
 
+/* --- Services Section Specific Styles --- */
+.services-section {
+    margin-top: 3rem;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.service-card {
+    background-color: var(--theme-bg-card);
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 5px 15px var(--theme-shadow-light);
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    border: 1px solid var(--theme-border-subtle);
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px var(--theme-shadow-medium);
+}
+
+.service-card h3 {
+    font-size: 1.5rem;
+    color: var(--theme-primary);
+    margin-bottom: 0.8rem;
+    transition: color 0.3s ease;
+}
+
+.service-card p {
+    font-size: 1rem;
+    color: var(--theme-text-main);
+    margin-bottom: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.service-card .cta-button {
+    display: inline-block;
+    background-color: var(--theme-accent-1);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.service-card .cta-button:hover {
+    background-color: var(--theme-accent-1);
+    filter: brightness(0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+}
+
 
 /* --- Footer --- */
 .frame-footer {
@@ -659,6 +723,304 @@ html[data-theme="dark"] .theme-icon-moon {
     }
 }
 
+
+
+   /* Resume Section Specific Styles */
+    .resume-section {
+        padding: 2rem;
+    }
+
+    .resume-highlights {
+        margin-top: 2.5rem;
+        background-color: var(--theme-bg-body);
+        /* Lighter background for highlights */
+        border-radius: var(--card-border-radius);
+        padding: 2rem;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        /* Subtle inner shadow */
+        border: 1px solid var(--theme-border-subtle);
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .resume-highlights h3 {
+        color: var(--theme-primary);
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .highlight-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .highlight-card {
+        background-color: var(--theme-bg-card);
+        border-radius: var(--card-border-radius);
+        box-shadow: 0 4px 15px var(--theme-shadow-light);
+        padding: 1.5rem;
+        border: 1px solid var(--theme-border-subtle);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .highlight-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px var(--theme-shadow-medium);
+    }
+
+    .highlight-card h4 {
+        color: var(--theme-accent-1);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px dashed var(--theme-border-subtle);
+        padding-bottom: 0.5rem;
+        transition: color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .highlight-card ul {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .highlight-card ul li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--theme-text-main);
+        transition: color 0.3s ease;
+    }
+
+    .highlight-card ul li::before {
+        content: '•';
+        /* Simple bullet point */
+        position: absolute;
+        left: 0;
+        color: var(--theme-accent-2);
+        font-weight: bold;
+        font-size: 1.2em;
+        line-height: 1;
+        transition: color 0.3s ease;
+    }
+
+    .resume-download-section {
+        margin-top: 3rem;
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--theme-bg-body);
+        /* Match highlight section background */
+        border-radius: var(--card-border-radius);
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--theme-border-subtle);
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .resume-download-section h3 {
+        color: var(--theme-primary);
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .download-form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: var(--theme-text-main);
+        transition: color 0.3s ease;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--theme-border-subtle);
+        border-radius: 8px;
+        background-color: var(--theme-bg-card);
+        color: var(--theme-text-main);
+        font-size: 1rem;
+        transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--theme-accent-1);
+        box-shadow: 0 0 0 3px rgba(var(--theme-accent-1-rgb), 0.2);
+    }
+
+    .download-button,
+    .view-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: var(--theme-accent-2);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .download-button:hover,
+    .view-button:hover {
+        background-color: var(--theme-accent-2);
+        filter: brightness(0.9);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .download-button i,
+    .view-button i {
+        font-size: 1.2em;
+    }
+
+    .resume-embed-option {
+        margin-top: 2rem;
+    }
+
+    .resume-embed-option h4 {
+        color: var(--theme-text-main);
+        margin-bottom: 1rem;
+    }
+
+    /* Lightbox Modal Styles */
+    .lightbox-modal {
+        display: none;
+        /* Hidden by default */
+        position: fixed;
+        /* Stay in place */
+        z-index: 1000;
+        /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%;
+        /* Full width */
+        height: 100%;
+        /* Full height */
+        overflow: auto;
+        /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.8);
+        /* Black w/ opacity */
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .lightbox-modal.open {
+        display: flex;
+        /* Show when open */
+        opacity: 1;
+    }
+
+    .lightbox-content {
+        background-color: var(--theme-bg-card);
+        margin: auto;
+        padding: 20px;
+        border-radius: var(--card-border-radius);
+        width: 90%;
+        max-width: 900px;
+        height: 90%;
+        max-height: 90vh;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+        transform: scale(0.9);
+        opacity: 0;
+        animation: modal-pop-in 0.3s forwards cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transition: background-color 0.3s ease;
+    }
+
+    .lightbox-modal.open .lightbox-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    @keyframes modal-pop-in {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .lightbox-content iframe {
+        width: 100%;
+        flex-grow: 1;
+        /* Take all available space */
+        border: 1px solid var(--theme-border-subtle);
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .close-button {
+        color: var(--theme-text-main);
+        position: absolute;
+        top: 15px;
+        right: 25px;
+        font-size: 35px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+        color: var(--theme-accent-1);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Prevent body scroll when modal is open */
+    body.no-scroll {
+        overflow: hidden;
+    }
+
+    /* Responsive adjustments for resume page */
+    @media (max-width: 768px) {
+        .highlight-grid {
+            grid-template-columns: 1fr;
+            /* Stack highlights on small screens */
+        }
+
+        .resume-download-section {
+            padding: 1.5rem;
+        }
+
+        .download-form {
+            max-width: 100%;
+        }
+
+        .lightbox-content {
+            width: 95%;
+            height: 95%;
+        }
+    }
+
+
 /* --- Utility Classes (Your original ones, just ensuring they use new variables if applicable) --- */
 pre{
   display:flex;
@@ -673,9 +1035,3 @@ pre{
 .social-links a:hover {
     color: var(--theme-accent-1); /* Uses theme-dependent variable */
 }
-
-
-
-
-
-/*==CUSTOM HEADER==*/

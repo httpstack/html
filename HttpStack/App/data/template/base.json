@@ -1,7 +1,9 @@
 {
-    "appName": "HTTpstACK",
-    "data":"this is a dynamic param",
-    "appLogo": "<i class='bi bi-house'>icon</i>",
-    "appSlogan": "Whats in your stACK?",
-    "appCopyright": "Copyright 2025 All Rights Reserved"
+    "appName": "httpstack",
+    "appSlogan": "Build with AI, Powered by You.",
+    "appCopyright": "© 2025 Chris McIntosh. All rights reserved.",
+    "heroTitle": "Chris McIntosh - Developer of httpstack",
+    "heroDescription": "Welcome! I'm Chris McIntosh, the creator of httpstack – a revolutionary project designed to simplify web development. httpstack empowers you to build stunning web components, designs, forms, and even entire web pages, either from AI-generated suggestions or pre-built presets. It intelligently breaks down every element into its core HTML, CSS, and JavaScript, giving you unparalleled control and clarity.",
+    "heroCtaLabel": "For Potential Employers: View My Resume",
+    "heroCtaUri": "resume.html"
 }
