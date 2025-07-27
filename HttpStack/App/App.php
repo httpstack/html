@@ -25,8 +25,8 @@ class App{
     protected Router $router;
     protected array $settings = [];
     protected FileLoader $fileLoader;
-    public bool $debug = false;
-    public function __construct(string $appPath = "/var/www/html/App/app") {
+    public bool $debug = true;
+    public function __construct(string $appPath = "/var/www/html/App") {
         $this->container = new Container();
 
         // Bind the essential instances FIRST
@@ -45,7 +45,13 @@ class App{
         $this->reportErrors();
         $GLOBALS["app"] = $this;
     }
-
+    public function getRequest(){
+        return $this->request;
+    }
+    public function getResponse(){
+        return $this->response;
+    
+    }
     public function get(Route $route){
         $this->router->after($route);
     }

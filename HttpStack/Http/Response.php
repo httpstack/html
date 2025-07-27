@@ -35,6 +35,9 @@ class Response implements ResponseInterface{
     public function setBody(string $content): void {
         $this->body = $content;
     }
+    public function redirect(string $url): void {
+        $this->headers["Location"] = $url;
+    }
 
     public function getBody(): string {
         return $this->body;

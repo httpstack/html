@@ -36,7 +36,14 @@ class PublicController{
             $res->send();
         }
     }
-        public function about($req, $res,$container,$matches){
+    public function stacks($req, $res,$container,$matches){
+        $v = $container->make("view", "public/stack");
+        $v->render();
+        if(!$res->sent){
+            $res->send();
+        }
+    }    
+    public function about($req, $res,$container,$matches){
         $res->setContentType("text/html")->setBody("about Page");
         if(!$res->sent){
             $res->send();

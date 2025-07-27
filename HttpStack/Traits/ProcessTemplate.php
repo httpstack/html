@@ -159,7 +159,7 @@ protected function replaceDataAttributePlaceholders(string $content, string $ite
             //dd($key);
             //dd($value);
             if (is_string($value) || is_numeric($value) || is_bool($value) || is_null($value)) {
-                $content = str_replace('{{' . $key . '}}', (string)$value, $content);
+                $content = str_replace('{{' . $key . '}}', $value, $content);
             }
             // Note: This method is specifically for simple {{key}} variables.
             // Dot notation for global variables would need to be added here if desired.

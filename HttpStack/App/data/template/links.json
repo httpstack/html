@@ -6,18 +6,13 @@
             "icon": "bi bi-file-binary-fill"
         },
         {
-            "label": "Projects",
-            "uri": "\/projects",
-            "icon": "bi bi-building-lock"
-        },
-        {
             "label": "Resume",
             "uri": "\/resume",
             "icon": "fas fas-watch"
         },
         {
             "label": "Stacks",
-            "uri": "\/HttpStack/App/Views/templates/stack.html",
+            "uri": "\/stacks",
             "icon": "fas fas-stack"
         }
     ],

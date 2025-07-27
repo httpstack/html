@@ -50,7 +50,9 @@ class View {
     }
     protected function toDomObject($str){
         $dom = new \DOMDocument();
-        $dom->loadHTML($str, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_use_internal_errors(true);
+        @$dom->loadHTML($str, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING);
+        libxml_clear_errors();
         return $dom;
     }
 
