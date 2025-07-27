@@ -1,0 +1,469 @@
+<style>
+        :host {
+          display: block;
+          width: 100%;
+          /* Define theme-like variables for consistent styling within the shadow root */
+          --form-bg-dark: rgba(15, 23, 42, 0.9);
+          --form-border-subtle: rgba(148, 163, 184, 0.3);
+          --form-text-light: #cbd5e1;
+          --form-text-placeholder: #94a3b8;
+          --form-gradient-start: #a78bfa; /* Lighter violet */
+          --form-gradient-end: #f472b6;   /* Lighter pink */
+          --form-error-color: #f87171;
+          --form-strength-weak: linear-gradient(90deg, #f87171, #ef4444);
+          --form-strength-medium: linear-gradient(90deg, #facc15, #f59e0b);
+          --form-strength-strong: linear-gradient(90deg, #34d399, #10b981);
+          --form-shadow-medium: rgba(0, 0, 0, 0.35);
+          --default-font: 'Inter', sans-serif; /* Fallback for default font */
+        }
+        
+        .form-container {
+          background: var(--form-bg-dark);
+          backdrop-filter: blur(12px);
+          border: 1px solid var(--form-border-subtle);
+          border-radius: 20px;
+          padding: 2.5rem;
+          box-shadow: 0 30px 60px -15px var(--form-shadow-medium), 0 0 15px rgba(139, 92, 246, 0.2);
+          position: relative;
+          overflow: hidden;
+          font-family: var(--default-font); /* Apply font here */
+        }
+
+        /* Adding a subtle background pattern/effect */
+        .form-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            animation: rotateBackground 20s linear infinite;
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        @keyframes rotateBackground {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .form-title {
+          color: white;
+          font-size: 2rem;
+          font-weight: 800;
+          margin-bottom: 2rem;
+          text-align: center;
+          background: linear-gradient(135deg, var(--form-gradient-start), var(--form-gradient-end));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: -0.05em;
+          text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+        }
+        
+        .form-group {
+          margin-bottom: 1.75rem;
+          position: relative;
+        }
+        
+        .form-label {
+          display: block;
+          color: var(--form-text-light);
+          font-weight: 600;
+          margin-bottom: 0.75rem;
+          transition: all 0.3s ease;
+          position: absolute;
+          top: 1rem; /* Adjusted for larger input padding */
+          left: 1rem;
+          pointer-events: none;
+          transform-origin: left top;
+          z-index: 1; /* Ensure label is above input when floating */
+        }
+
+        .form-input:focus + .form-label,
+        .form-input:not(:placeholder-shown) + .form-label {
+            transform: translateY(-1.75rem) scale(0.85);
+            color: var(--form-gradient-start);
+        }
+        
+        .form-input {
+          width: 100%;
+          padding: 1rem 1rem;
+          background: rgba(45, 53, 72, 0.6);
+          border: 1px solid var(--form-border-subtle);
+          border-radius: 12px;
+          color: white;
+          font-size: 1.1rem;
+          transition: all 0.4s ease;
+          box-sizing: border-box;
+          -webkit-appearance: none;
+        }
+        
+        .form-input:focus {
+          outline: none;
+          border-color: var(--form-gradient-start);
+          box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.2);
+          background: rgba(45, 53, 72, 0.8);
+        }
+        
+        .form-input::placeholder {
+          color: var(--form-text-placeholder);
+          opacity: 0.7;
+        }
+        
+        .error-message {
+          color: var(--form-error-color);
+          font-size: 0.9rem;
+          margin-top: 0.5rem;
+          min-height: 1.25rem;
+          text-shadow: 0 0 5px rgba(248, 113, 113, 0.3);
+          display: none; /* Hidden by default, shown by JS */
+        }
+        .error-message.active {
+            display: block;
+        }
+        .error-message ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+        .error-message li {
+            margin-bottom: 3px;
+        }
+        
+        .strength-container {
+          margin-top: 0.75rem;
+        }
+        
+        .strength-meter {
+          height: 6px;
+          background: rgba(148, 163, 184, 0.2);
+          border-radius: 3px;
+          overflow: hidden;
+          position: relative;
+        }
+        
+        .strength-meter::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          width: 0;
+          transition: all 0.4s ease;
+          border-radius: 3px;
+        }
+        
+        .strength-meter.weak::after {
+          width: 33%;
+          background: var(--form-strength-weak);
+        }
+        
+        .strength-meter.medium::after {
+          width: 66%;
+          background: var(--form-strength-medium);
+        }
+        
+        .strength-meter.strong::after {
+          width: 100%;
+          background: var(--form-strength-strong);
+        }
+        
+        .strength-text {
+          font-size: 0.875rem;
+          margin-top: 0.5rem;
+          font-weight: 600;
+          color: var(--form-text-light);
+        }
+        
+        .strength-meter.weak + .strength-text {
+          color: var(--form-error-color);
+        }
+        
+        .strength-meter.medium + .strength-text {
+          color: #facc15; /* Specific yellow for medium */
+        }
+        
+        .strength-meter.strong + .strength-text {
+          color: #34d399; /* Specific green for strong */
+        }
+        
+        .submit-button {
+          width: 100%;
+          padding: 1rem 1.5rem;
+          background: linear-gradient(135deg, var(--form-gradient-start), var(--form-gradient-end));
+          border: none;
+          border-radius: 12px;
+          color: white;
+          font-weight: 700;
+          font-size: 1.15rem;
+          cursor: pointer;
+          transition: all 0.4s ease;
+          margin-top: 2rem;
+          letter-spacing: 0.05em;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .submit-button:hover::before {
+            left: 100%;
+        }
+
+        .submit-button:hover:not(:disabled) {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 30px -8px rgba(167, 139, 250, 0.6);
+        }
+        
+        .submit-button:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 5px 15px -5px rgba(167, 139, 250, 0.4);
+        }
+
+        .submit-button:disabled {
+            background: #4a5568; /* Darker, desaturated background when disabled */
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            .form-title {
+                font-size: 1.75rem;
+                margin-bottom: 1.5rem;
+            }
+            .form-input {
+                font-size: 1rem;
+                padding: 0.75rem 1rem;
+            }
+            .submit-button {
+                font-size: 1rem;
+                padding: 0.8rem 1rem;
+                margin-top: 1.5rem;
+            }
+            .form-label {
+                top: 0.5rem;
+            }
+            .form-input:focus + .form-label,
+            .form-input:not(:placeholder-shown) + .form-label {
+                transform: translateY(-1.5rem) scale(0.85);
+            }
+        }
+      </style>
+      
+      <div class="form-container">
+        <h2 class="form-title">Create Account</h2>
+        
+        <form id="signup-form">
+          <div class="form-group">
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder=" "
+              required
+            />
+            <label for="email" class="form-label">Email Address</label>
+            <div id="email-error" class="error-message"></div>
+          </div>
+          
+          <div class="form-group">
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder=" "
+              required
+            />
+            <label for="password" class="form-label">Password</label>
+            <div class="strength-container">
+              <div id="strength-meter" class="strength-meter"></div>
+              <div id="strength-text" class="strength-text"></div>
+            </div>
+            <div id="password-error" class="error-message"></div>
+          </div>
+          
+          <div class="form-group">
+            <input 
+              type="password" 
+              id="confirm-password" 
+              class="form-input" 
+              placeholder=" "
+              required
+            />
+            <label for="confirm-password" class="form-label">Confirm Password</label>
+            <div id="confirm-password-error" class="error-message"></div>
+          </div>
+          
+          <button type="submit" class="submit-button" disabled>
+            Create Account
+          </button>
+        </form>
+      </div>
+
+      <script>
+        // Ensure the script runs after the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('signup-form');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const submitButton = form.querySelector('.submit-button');
+            const emailError = document.getElementById('email-error');
+            const passwordError = document.getElementById('password-error');
+            const confirmPasswordError = document.getElementById('confirm-password-error');
+            const strengthMeter = document.getElementById('strength-meter');
+            const strengthText = document.getElementById('strength-text');
+
+            // Password validation rules (from your React signup.html)
+            const minLength = 8;
+            const hasNumber = /[0-9]/;
+            const hasUpper = /[A-Z]/;
+            const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            // --- Validation Functions ---
+
+            const validateEmail = () => {
+                const email = emailInput.value.trim();
+                if (email.length === 0) {
+                    emailError.textContent = '';
+                    emailError.classList.remove('active');
+                    return false;
+                }
+                if (!emailRegex.test(email)) {
+                    emailError.textContent = 'Please enter a valid email address.';
+                    emailError.classList.add('active');
+                    return false;
+                }
+                emailError.textContent = '';
+                emailError.classList.remove('active');
+                return true;
+            };
+
+            const validatePassword = () => {
+                const password = passwordInput.value;
+                let score = 0;
+                let messages = [];
+
+                if (password.length >= minLength) {
+                    score++;
+                } else {
+                    messages.push(`Be at least ${minLength} characters`);
+                }
+                if (hasNumber.test(password)) {
+                    score++;
+                } else {
+                    messages.push('Contain a number');
+                }
+                if (hasUpper.test(password)) {
+                    score++;
+                } else {
+                    messages.push('Contain an uppercase letter');
+                }
+                if (hasSpecial.test(password)) {
+                    score++;
+                } else {
+                    messages.push('Contain a special character');
+                }
+
+                // Update strength meter and text
+                strengthMeter.classList.remove('weak', 'medium', 'strong');
+                strengthText.textContent = '';
+
+                if (password.length > 0) {
+                    if (score === 4) {
+                        strengthMeter.classList.add('strong');
+                        strengthText.textContent = 'Strong';
+                    } else if (score >= 2) {
+                        strengthMeter.classList.add('medium');
+                        strengthText.textContent = 'Medium';
+                    } else {
+                        strengthMeter.classList.add('weak');
+                        strengthText.textContent = 'Weak';
+                    }
+                }
+
+                // Update error messages
+                if (messages.length > 0 && password.length > 0) {
+                    passwordError.innerHTML = 'Password must:<ul>' + messages.map(msg => `<li>${msg}</li>`).join('') + '</ul>';
+                    passwordError.classList.add('active');
+                    return false;
+                } else {
+                    passwordError.textContent = '';
+                    passwordError.classList.remove('active');
+                    return true;
+                }
+            };
+
+            const validateConfirmPassword = () => {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if (confirmPassword.length === 0) {
+                    confirmPasswordError.textContent = '';
+                    confirmPasswordError.classList.remove('active');
+                    return false;
+                }
+                if (password !== confirmPassword) {
+                    confirmPasswordError.textContent = 'Passwords do not match.';
+                    confirmPasswordError.classList.add('active');
+                    return false;
+                }
+                confirmPasswordError.textContent = '';
+                confirmPasswordError.classList.remove('active');
+                return true;
+            };
+
+            const updateButtonState = () => {
+                const isFormValid = validateEmail() && validatePassword() && validateConfirmPassword();
+                submitButton.disabled = !isFormValid;
+            };
+
+            // --- Event Listeners ---
+            emailInput.addEventListener('input', updateButtonState);
+            passwordInput.addEventListener('input', updateButtonState);
+            confirmPasswordInput.addEventListener('input', updateButtonState);
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault(); // Prevent default form submission
+
+                // Final validation before actual submission (optional, as button is disabled)
+                if (validateEmail() && validatePassword() && validateConfirmPassword()) {
+                    alert('Account created successfully!');
+                    // In a real application, you would send data to a server here.
+                    console.log('Signup data:', {
+                        email: emailInput.value,
+                        password: passwordInput.value
+                    });
+                    form.reset(); // Clear the form
+                    // Manually reset strength meter and text if needed after reset
+                    strengthMeter.classList.remove('weak', 'medium', 'strong');
+                    strengthText.textContent = '';
+                    submitButton.disabled = true; // Disable button again after submission
+                } else {
+                    alert('Please correct the errors in the form.');
+                }
+            });
+
+            // Initial state update when the page loads
+            updateButtonState();
+        });
+      </script>
