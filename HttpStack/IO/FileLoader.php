@@ -17,11 +17,15 @@ class FileLoader
     protected array $mappedDirectories = [];
 
     /**
-     * Default extension for files.
+     * Default extension for files (e.g., for PHP files).
      */
     protected string $defaultExtension = 'php';
 
+    /**
+     * Default extension specifically for HTML files, used by readFile.
+     */
     protected string $defaultHtmlExtension = 'html';
+
     /**
      * File cache.
      */
@@ -47,6 +51,7 @@ class FileLoader
             throw new AppException("Directory not found: {$directory}");
         }
 
+        // Store the directory path, ensuring no trailing slash for consistent path concatenation
         $this->mappedDirectories[$name] = rtrim($directory, '/');
 
         return $this;
@@ -70,102 +75,116 @@ class FileLoader
 
     /**
      * Find a file by name in mapped directories (searches subdirectories).
+     *
+     * This method now directly constructs potential file paths based on mapped directories
+     * and the provided name (which can include subdirectories like "public/home").
+     *
+     * @param string $name The base name or path relative to a mapped directory (e.g., "public/home").
+     * @param string|null $directory Optional. The name of a specific mapped directory to search within, or null to search all.
+     * @param string|null $extension Optional. The desired file extension (e.g., "html", "php"). If not provided, $this->defaultExtension is used.
+     * @return string|null The full path to the found file, or null if not found.
      */
     public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
     {
-        // Use default extension if not supplied
-        $extension = $extension ?? $this->defaultExtension;
-
-        // Only add extension if not already present
-        if (!empty($extension) && !pathinfo($name, PATHINFO_EXTENSION)) {
-            $name .= '.' . ltrim($extension, '.');
-        }
-
-        // Normalize the search name to use forward slashes for consistency
+        // Normalize the search name to use forward slashes for consistency across OS
         $normalizedName = str_replace('\\', '/', $name);
 
-        // If a directory is specified, search only there
+        // Determine the final extension to use. Prioritize provided extension, then defaultExtension.
+        $finalExtension = $extension ?? $this->defaultExtension;
+
+        // Add the determined extension to the normalized name if it's not already present.
+        // pathinfo correctly handles names with slashes (e.g., "public/home" has no extension).
+        if (!empty($finalExtension) && pathinfo($normalizedName, PATHINFO_EXTENSION) === '') {
+            $normalizedName .= '.' . ltrim($finalExtension, '.');
+        }
+
+        $searchBaseDirectories = [];
+
+        // Determine which base directories to search
         if ($directory !== null) {
-            $dir = $this->mappedDirectories[$directory] ?? $directory;
-
-            if (is_dir($dir)) {
-                $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
-                foreach ($files as $file) {
-                    // Normalize the file path relative to the base directory for comparison
-                    $relativePath = str_replace('\\', '/', substr($file, strlen($dir) + 1));
-
-                    // Check if the relative path ends with the normalized search name
-                    if ($relativePath === $normalizedName || basename($file) === $normalizedName) {
-                        return $file;
-                    }
-                }
+            // If a specific directory name is provided, use its mapped path
+            $baseDir = $this->mappedDirectories[$directory] ?? $directory; // Allow direct path if not mapped
+            if (is_dir($baseDir)) {
+                $searchBaseDirectories[] = $baseDir;
             }
-            return null;
-        }
-
-        // If no directory specified, search all mapped directories
-        foreach ($this->mappedDirectories as $dir) {
-            if (is_dir($dir)) {
-                $files = $this->scanDirectoryForExtensions($dir, (array)$extension);
-                foreach ($files as $file) {
-                    // Normalize the file path relative to the base directory for comparison
-                    $relativePath = str_replace('\\', '/', substr($file, strlen($dir) + 1));
-
-                    // Check if the relative path ends with the normalized search name
-                    if ($relativePath === $normalizedName || basename($file) === $normalizedName) {
-                        return $file;
-                    }
+        } else {
+            // If no specific directory, search all mapped directories
+            foreach ($this->mappedDirectories as $baseDir) {
+                if (is_dir($baseDir)) {
+                    $searchBaseDirectories[] = $baseDir;
                 }
             }
         }
-        return null;
+
+        // Iterate through the determined base directories and check for the file
+        foreach ($searchBaseDirectories as $baseDir) {
+            // Construct the full potential path
+            $fullPath = rtrim($baseDir, '/') . '/' . $normalizedName;
+
+            // Check if the file exists at this full path and is a regular file
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                return $fullPath;
+            }
+        }
+
+        return null; // File not found in any of the specified or mapped directories
     }
 
     /**
      * Find all files by extension(s) in mapped directories.
      *
-     * @param string|array $extensions A single extension string or an array of extensions.
-     * @param string|array|null $directories Optional. A single directory name, an array of directory names, or null for all mapped directories.
+     * @param array $extensions An array of extensions (e.g., ['php', 'html']).
+     * @param string|null $directory Optional. The name of a specific mapped directory to search within, or null for all mapped directories.
+     * @return array An array of full paths to the found files.
      */
     public function findFilesByExtension(array $extensions, ?string $directory = null): array
     {
         $foundFiles = [];
+        $searchBaseDirectories = [];
+
         if ($directory !== null) {
-            $dir = $this->mappedDirectories[$directory] ?? $directory;
-            if (is_dir($dir)) {
-                $foundFiles = array_merge($foundFiles, $this->scanDirectoryForExtensions($dir, $extensions));
+            $baseDir = $this->mappedDirectories[$directory] ?? $directory;
+            if (is_dir($baseDir)) {
+                $searchBaseDirectories[] = $baseDir;
             }
         } else {
-            foreach ($this->mappedDirectories as $dir) {
-                if (is_dir($dir)) {
-                    $foundFiles = array_merge($foundFiles, $this->scanDirectoryForExtensions($dir, $extensions));
+            foreach ($this->mappedDirectories as $baseDir) {
+                if (is_dir($baseDir)) {
+                    $searchBaseDirectories[] = $baseDir;
                 }
             }
         }
-        return array_unique($foundFiles);
+
+        foreach ($searchBaseDirectories as $baseDir) {
+            $foundFiles = array_merge($foundFiles, $this->scanDirectoryForExtensions($baseDir, $extensions));
+        }
+
+        return array_unique($foundFiles); // Return unique paths
     }
 
 
     /**
-     * Scan a directory for files with specific extensions.
+     * Scan a directory for files with specific extensions recursively.
      *
      * @param string $directory The directory to scan.
      * @param array $extensions An array of extensions (e.g., ['php', 'html']).
-     * @return array
+     * @return array An array of full paths to the found files.
      */
     protected function scanDirectoryForExtensions(string $directory, array $extensions): array
     {
         $foundFiles = [];
+        // Use RecursiveIteratorIterator to traverse directories recursively
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::LEAVES_ONLY
+            \RecursiveIteratorIterator::LEAVES_ONLY // Only return files, not directories
         );
 
         foreach ($iterator as $file) {
-            if ($file->isFile()) {
+            if ($file->isFile()) { // Ensure it's a file
                 $fileExtension = pathinfo($file->getFilename(), PATHINFO_EXTENSION);
+                // Check if the file's extension is in the list of desired extensions
                 if (in_array($fileExtension, $extensions)) {
-                    $foundFiles[] = $file->getPathname();
+                    $foundFiles[] = $file->getPathname(); // Add the full path
                 }
             }
         }
@@ -176,7 +195,12 @@ class FileLoader
     /**
      * Load a file's contents.
      *
-     * @throws AppException
+     * This method now uses file_get_contents() to retrieve the actual content of the file.
+     *
+     * @param string $path The path or name of the file to load (can be relative to a mapped directory).
+     * @param bool $useCache Whether to use or update the file cache.
+     * @throws AppException If the file is not found or cannot be read.
+     * @return string The content of the file.
      */
     public function loadFile(string $path, bool $useCache = true): string
     {
@@ -185,32 +209,32 @@ class FileLoader
             return $this->fileCache[$path];
         }
 
-        // Resolve the path if it's a mapped directory
-        if (isset($this->mappedDirectories[$path])) {
-            $path = $this->mappedDirectories[$path];
-        }
+        $foundPath = $path; // Assume the provided path is potentially a direct file path
 
-        // If the path is not absolute, try to find the file
+        // If the provided path is not an existing file, try to find it using the findFile logic
         if (!is_file($path)) {
+            // Attempt to resolve the path using findFile, searching all mapped directories
             $foundPath = $this->findFile($path);
 
             if ($foundPath === null) {
                 throw new AppException("File not found: {$path}");
             }
-
-            $path = $foundPath;
         }
 
-        // Load the file
-        $content = include $path; // Be cautious: include returns the value of the included file, not its content
+        // Load the file content using file_get_contents
+        $content = @file_get_contents($foundPath); // Use @ to suppress warnings; handle errors explicitly below
 
         if ($content === false) {
-            throw new AppException("Failed to read file: {$path}");
+            throw new AppException("Failed to read file: {$foundPath}");
         }
 
-        // Cache the content
+        // Cache the content if caching is enabled
         if ($useCache) {
-            $this->fileCache[$path] = $content;
+            $this->fileCache[$foundPath] = $content;
+            // Also cache by the original requested path if different, for consistent lookup
+            if ($path !== $foundPath) {
+                $this->fileCache[$path] = $content;
+            }
         }
 
         return $content;
@@ -219,36 +243,39 @@ class FileLoader
     /**
      * Require a PHP file.
      *
-     * @throws AppException
+     * @param string $path The path or name of the PHP file to require.
+     * @throws AppException If the file is not found.
+     * @return mixed The return value of the required file.
      */
     public function requireFile(string $path)
     {
-        // Resolve the path if it's a mapped directory
-        if (isset($this->mappedDirectories[$path])) {
-            $path = $this->mappedDirectories[$path];
-        }
+        $foundPath = $path;
 
-        // If the path is not absolute, try to find the file
         if (!is_file($path)) {
-            $foundPath = $this->findFile($path);
-
+            $foundPath = $this->findFile($path, null, 'php'); // Assume PHP file for require
             if ($foundPath === null) {
                 throw new AppException("File not found: {$path}");
             }
-
-            $path = $foundPath;
         }
 
-        return require $path;
+        return require $foundPath;
     }
+
+    /**
+     * Parse a JSON file and return its content as an associative array.
+     *
+     * @param string $path The path to the JSON file.
+     * @throws AppException If the file is not found or JSON parsing fails.
+     * @return array The parsed JSON data.
+     */
     public function parseJsonFile(string $path): array
     {
-        if(is_file($path)){
+        if (is_file($path)) {
             $content = file_get_contents($path);
             $data = json_decode($content, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new AppException("Failed to parse JSON file: {$path}");
+                throw new AppException("Failed to parse JSON file: {$path}. Error: " . json_last_error_msg());
             }
 
             return $data;
@@ -256,77 +283,90 @@ class FileLoader
             throw new AppException("File not found: {$path}");
         }
     }
+
     /**
      * Include a PHP file.
      *
-     * @throws AppException
+     * @param string $path The path or name of the PHP file to include.
+     * @throws AppException If the file is not found.
+     * @return mixed The return value of the included file.
      */
     public function includeFile(string $path)
     {
-        // Resolve the path if it's a mapped directory
-        if (isset($this->mappedDirectories[$path])) {
-            $path = $this->mappedDirectories[$path];
-        }
+        $foundPath = $path;
 
-        // If the path is not absolute, try to find the file
         if (!is_file($path)) {
-            $foundPath = $this->findFile($path);
-
+            $foundPath = $this->findFile($path, null, 'php'); // Assume PHP file for include
             if ($foundPath === null) {
                 throw new AppException("File not found: {$path}");
             }
-
-            $path = $foundPath;
         }
 
-        return include $path;
+        return include $foundPath;
     }
 
     /**
      * Write content to a file.
+     *
+     * @param string $path The full path to the file to write.
+     * @param string $content The content to write to the file.
+     * @return bool True on success, false on failure.
      */
     public function writeFile(string $path, string $content): bool
     {
-        // Ensure the directory exists
+        // Ensure the directory exists; create it recursively if it doesn't
         $directory = dirname($path);
-
         if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
+            // mkdir with recursive flag and default permissions
+            if (!mkdir($directory, 0755, true) && !is_dir($directory)) {
+                // Check again if directory exists in case of race condition
+                throw new AppException("Failed to create directory: {$directory}");
+            }
         }
 
-        // Write the content
+        // Write the content to the file
         $result = file_put_contents($path, $content);
 
-        // Update the cache
+        // Update the cache if write was successful
         if ($result !== false) {
             $this->fileCache[$path] = $content;
-
             return true;
         }
 
-        return false;
+        return false; // Write operation failed
     }
-    public function readFile(string $baseName){
+
+    /**
+     * Read the content of a file, specifically looking for HTML files by default.
+     *
+     * @param string $baseName The base name or path relative to a mapped directory (e.g., "public/home").
+     * @throws AppException If the file is not found.
+     * @return string The content of the file.
+     */
+    public function readFile(string $baseName): string
+    {
+        // Use findFile to locate the file, explicitly looking for the default HTML extension
         $path = $this->findFile($baseName, null, $this->defaultHtmlExtension);
         if ($path === null) {
             throw new AppException("File not found: {$baseName}");
         }
         return file_get_contents($path);
-    }   
+    }
+
     /**
-     * Set the default file extension.
+     * Set the default file extension for files found by findFile when no extension is specified.
      *
+     * @param string $extension The new default extension (e.g., "php", "txt").
      * @return $this
      */
     public function setDefaultExtension(string $extension): self
     {
         $this->defaultExtension = ltrim($extension, '.');
-
         return $this;
     }
 
     /**
-     * Get the default file extension.
+     * Get the current default file extension.
      */
     public function getDefaultExtension(): string
     {
@@ -341,38 +381,43 @@ class FileLoader
     public function clearCache(): self
     {
         $this->fileCache = [];
-
         return $this;
     }
 
     /**
-     * Handle duplicate files.
+     * Handle duplicate files found, based on a specified strategy.
+     *
+     * @param array $files An array of file paths that may contain duplicates.
+     * @param string $strategy The strategy to use: 'first', 'last', or 'all'.
+     * @return array An array of file paths after applying the duplicate handling strategy.
      */
     public function handleDuplicates(array $files, string $strategy = 'first'): array
     {
         $result = [];
         $fileNames = [];
 
+        // Group files by their base name
         foreach ($files as $file) {
             $name = basename($file);
-
             if (!isset($fileNames[$name])) {
                 $fileNames[$name] = [];
             }
-
             $fileNames[$name][] = $file;
         }
 
+        // Apply the chosen strategy for duplicates
         foreach ($fileNames as $name => $paths) {
             if (count($paths) === 1) {
+                // If only one file with this name, add it directly
                 $result[] = $paths[0];
             } else {
+                // Handle duplicates based on strategy
                 if ($strategy === 'first') {
-                    $result[] = $paths[0];
+                    $result[] = $paths[0]; // Take the first one found
                 } elseif ($strategy === 'last') {
-                    $result[] = end($paths);
+                    $result[] = end($paths); // Take the last one found
                 } elseif ($strategy === 'all') {
-                    $result = array_merge($result, $paths);
+                    $result = array_merge($result, $paths); // Include all duplicates
                 }
             }
         }

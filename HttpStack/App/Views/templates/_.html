@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocInit Custom Web Component</title>
+    <!-- Include jQuery first -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Include Babel Standalone for JSX transpilation -->
+    <!-- This is crucial for type="text/babel" to work in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 700px;
+            width: 90%;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        doc-init {
+            display: block;
+            /* Custom elements are inline by default */
+            margin-top: 30px;
+            border: 2px dashed #a0a0a0;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+            /* Include padding and border in the element's total width and height */
+        }
+
+        doc-init::before {
+            content: "Content within DocInit's Shadow DOM:";
+            display: block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .message-box {
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #0056b3;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .error-box {
+            background-color: #fff0f0;
+            border: 1px solid #ff4d4d;
+            color: #cc0000;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+
+    <!-- Custom Web Component Script (placed after jQuery and Babel) -->
+    <script>
+        // Ensure jQuery and Babel are loaded before defining the custom element
+        if (typeof jQuery === 'undefined') {
+            console.error("jQuery is not loaded. Please ensure jQuery script is included before doc-init.");
+        } else if (typeof Babel === 'undefined') {
+            console.warn("Babel standalone is not loaded. JSX files will not be transpiled correctly.");
+        }
+
+        class DocInit extends HTMLElement {
+            constructor() {
+                super();
+                // Attach a Shadow DOM to the custom element itself
+                this.shadowRoot = this.attachShadow({ mode: 'open' }); // 'open' mode allows external JS access
+                this.statusMessage = null; // To hold the status element reference
+                this.loadedCount = 0;
+                this.totalResources = 0;
+
+                // Map for font MIME types for preload
+                this.fontMimeTypes = {
+                    'otf': 'font/otf',
+                    'ttf': 'font/ttf',
+                    'woff': 'font/woff',
+                    'woff2': 'font/woff2'
+                };
+            }
+
+            connectedCallback() {
+                const resListUrl = this.getAttribute('resList');
+
+                if (!resListUrl) {
+                    console.error('DocInit: Missing "resList" attribute. Please provide a path to a JSON file.');
+                    this.shadowRoot.innerHTML = '<div class="error-box">Error: Missing "resList" attribute.</div>';
+                    return;
+                }
+
+                // Add a status message element to the Shadow DOM
+                this.statusMessage = $('<div>').addClass('message-box').text('Fetching resource list...').appendTo(this.shadowRoot);
+
+                // Use jQuery to fetch the JSON data
+                $.getJSON(resListUrl)
+                    .done(resources => {
+                        if (!Array.isArray(resources)) {
+                            console.error('DocInit: JSON data is not an array.', resources);
+                            this.statusMessage.removeClass('message-box').addClass('error-box').text('Error: JSON data is not an array.');
+                            return;
+                        }
+                        this.totalResources = resources.length;
+                        this.statusMessage.text(`Loading resources... (${this.totalResources})`);
+                        this.loadResourcesIntoShadowRoot(resources);
+                    })
+                    .fail((jqXHR, textStatus, errorThrown) => {
+                        console.error('DocInit: Failed to load resource list from ' + resListUrl, textStatus, errorThrown);
+                        this.statusMessage.removeClass('message-box').addClass('error-box').text(`Error loading resource list: ${textStatus} ${errorThrown}`);
+                    });
+            }
+
+            updateStatus() {
+                this.loadedCount++;
+                this.statusMessage.text(`Loading resources... (${this.loadedCount}/${this.totalResources})`);
+                if (this.loadedCount === this.totalResources) {
+                    this.statusMessage.text('All resources processed within Shadow DOM.');
+                    // Add some example content styled by the loaded resources
+                    $(this.shadowRoot).append('<p style="font-family: \'Roboto\', sans-serif; color: #28a745; font-weight: bold;">This text is styled by a dynamically loaded font and CSS!</p>');
+                    $(this.shadowRoot).append('<p style="color: #007bff;">If a script was loaded, it might have added more content or functionality.</p>');
+                }
+            }
+
+            loadResourcesIntoShadowRoot(resources) {
+                $.each(resources, (index, filename) => {
+                    const fileExtension = filename.split('.').pop().toLowerCase().split('?')[0]; // Handle query parameters
+                    let element;
+
+                    switch (fileExtension) {
+                        case 'css':
+                            element = $('<link>', {
+                                rel: 'stylesheet',
+                                href: filename,
+                                type: 'text/css'
+                            });
+                            break;
+                        case 'js':
+                            element = $('<script>', {
+                                src: filename,
+                                type: 'text/javascript'
+                            });
+                            // Attach onload/onerror directly to the native element
+                            element[0].onload = () => this.updateStatus();
+                            element[0].onerror = () => {
+                                console.error(`DocInit: Failed to load script: ${filename}`);
+                                this.updateStatus(); // Still update count even on error
+                            };
+                            break;
+                        case 'jsx':
+                            element = $('<script>', {
+                                src: filename,
+                                type: 'text/babel' // Changed to text/babel for JSX
+                            });
+                            // Attach onload/onerror directly to the native element
+                            element[0].onload = () => this.updateStatus();
+                            element[0].onerror = () => {
+                                console.error(`DocInit: Failed to load JSX script: ${filename}`);
+                                this.updateStatus(); // Still update count even on error
+                            };
+                            break;
+                        case 'otf':
+                        case 'ttf':
+                        case 'woff':
+                        case 'woff2':
+                            // Preload the font
+                            element = $('<link>', {
+                                rel: 'preload',
+                                href: filename,
+                                as: 'font',
+                                type: this.fontMimeTypes[fileExtension],
+                                crossorigin: 'anonymous' // Important for fonts loaded from different origins
+                            });
+                            // After preloading, you'd typically have a CSS file that uses this font via @font-face.
+                            // For demonstration, we'll just log that it's preloaded.
+                            console.log(`DocInit: Preloading font: ${filename}`);
+                            break;
+                        default:
+                            console.warn(`DocInit: Unsupported file type for: ${filename}`);
+                            break;
+                    }
+
+                    if (element) {
+                        $(this.shadowRoot).append(element);
+                        // For non-script elements, update status immediately
+                        if (fileExtension !== 'js' && fileExtension !== 'jsx') {
+                            this.updateStatus();
+                        }
+                    } else {
+                        this.updateStatus(); // Still update count if no element was created
+                    }
+                });
+            }
+        }
+
+        // Define the custom element
+        customElements.define('doc-init', DocInit);
+
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>DocInit Custom Web Component Demo</h1>
+        <p>This page uses a custom web component <code>&lt;doc-init&gt;</code> to dynamically load resources (CSS, JS,
+            Fonts) into its Shadow DOM.</p>
+        <p>The resource list is fetched from <code>resources.json</code> using jQuery AJAX.</p>
+        <p><strong>Note:</strong> JSX files are loaded with <code>type="text/babel"</code>, requiring the Babel
+            standalone script in the head. Font files are preloaded.</p>
+
+        <!-- The custom web component -->
+        <doc-init resList="./resources.json"></doc-init>
+
+        <p class="message-box">Inspect the <code>&lt;doc-init&gt;</code> element in your browser's developer tools to
+            see its Shadow DOM content, including preloaded font links.</p>
+    </div>
+
+    <!-- Instructions for creating resources.json -->
+    <div class="container" style="margin-top: 20px; background-color: #e9f5ff; border: 1px dashed #a8d6ff;">
+        <h2>Setup Instructions:</h2>
+        <p>To make this example fully functional, create a file named <code>resources.json</code> in the **same
+            directory** as this HTML file with the following content:</p>
+        <pre style="background-color: #f0f8ff; padding: 15px; border-radius: 8px; text-align: left; overflow-x: auto;">
+[
+    "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap",
+    "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+    "./my-custom-styles.css",
+    "./my-script.js",
+    "./my-component.jsx",
+    "./my-font.woff2"
+]</pre>
+        <p>You can also create dummy files for testing:</p>
+        <ul>
+            <li>
+                <strong><code>my-custom-styles.css</code>:</strong>
+                <pre
+                    style="background-color: #f0f8ff; padding: 10px; border-radius: 5px; text-align: left; font-size: 0.9em;">
+p {
+    color: purple;
+    font-size: 1.1em;
+    border-bottom: 1px dotted lightgray;
+    padding-bottom: 5px;
+}
+</pre>
+            </li>
+            <li>
+                <strong><code>my-script.js</code>:</strong>
+                <pre
+                    style="background-color: #f0f8ff; padding: 10px; border-radius: 5px; text-align: left; font-size: 0.9em;">
+console.log('my-script.js loaded into DocInit Shadow DOM!');
+const shadowRootElement = document.querySelector('doc-init').shadowRoot;
+if (shadowRootElement) {
+    const newDiv = document.createElement('div');
+    newDiv.textContent = 'Content added by my-script.js (via Shadow DOM)!';
+    newDiv.style.color = 'orange';
+    newDiv.style.marginTop = '10px';
+    shadowRootElement.appendChild(newDiv);
+}
+</pre>
+            </li>
+            <li>
+                <strong><code>my-component.jsx</code>:</strong> (This will be transpiled by Babel)
+                <pre
+                    style="background-color: #f0f8ff; padding: 10px; border-radius: 5px; text-align: left; font-size: 0.9em;">
+// This is JSX code. It requires Babel to transpile in the browser.
+class MyJSXComponent extends React.Component {
+    render() {
+        return (
+            &lt;div style={{ color: 'green', marginTop: '15px' }}&gt;
+                Hello from a JSX component loaded into Shadow DOM!
+            &lt;/div&gt;
+        );
+    }
+}
+
+// To make this visible, you'd typically render it to an element within the shadow DOM.
+// For simplicity in this example, we'll just log its loading.
+console.log('my-component.jsx loaded and transpiled!');
+
+// If you wanted to render it, you'd need React and ReactDOM loaded in the shadow DOM as well:
+// ReactDOM.render(&lt;MyJSXComponent /&gt;, document.querySelector('doc-init').shadowRoot.getElementById('jsx-mount-point'));
+// You would also need to add a &lt;div id="jsx-mount-point"&gt;&lt;/div&gt; to the shadow DOM.
+</pre>
+            </li>
+            <li>
+                For font files (e.g., `my-font.woff2`), you'd place an actual font file there. The Google Fonts example
+                already demonstrates loading a font via CSS.
+            </li>
+        </ul>
+    </div>
+</body>
+
+</html>

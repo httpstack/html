@@ -1,43 +1,75 @@
 {
+    "version": "0.2.0",
     "configurations": [
         {
-            "type": "browser-preview",
+            "name": "Listen for Xdebug",
+            "type": "php",
             "request": "launch",
-            "name": "Browser Preview: Attach"
-        },
-        {
-            "type": "msedge",
-            "name": "Launch Microsoft Edge",
-            "request": "launch",
-            "runtimeArgs": [
-                "--remote-debugging-port=9222"
-            ],
-            "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
-            "presentation": {
-                "hidden": true
+            "port": 9003, // This must match xdebug.client_port in php.ini
+            "pathMappings": {
+                // This is CRUCIAL for mapping your local project path to the server's path.
+                // If your project is at /var/www/html/my-project on the server
+                // and /Users/youruser/Projects/my-project on your local machine:
+                "/var/www/html/": "${workspaceFolder}/" // Example for Linux server
+                // Or for a Docker container:
+                // "/var/www/html": "${workspaceFolder}"
+                // Or if your project root *is* the web root on the server:
+                // "/path/to/your/web/root": "${workspaceFolder}"
             }
         },
         {
-            "type": "msedge",
-            "name": "Launch Microsoft Edge in headless mode",
+            "name": "Launch currently open script",
+            "type": "php",
             "request": "launch",
+            "program": "${file}",
+            "cwd": "${fileDirname}",
+            "port": 9003,
             "runtimeArgs": [
-                "--headless",
-                "--remote-debugging-port=9222"
+                "-dxdebug.mode=debug",
+                "-dxdebug.start_with_request=yes"
             ],
-            "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
-            "presentation": {
-                "hidden": true
-            }
-        },
-        {
-            "type": "vscode-edge-devtools.debug",
-            "name": "Open Edge DevTools",
-            "request": "attach",
-            "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
-            "presentation": {
-                "hidden": true
+            "env": {
+                "XDEBUG_MODE": "debug"
             }
         }
     ]
+},
+{
+    "type": "browser-preview",
+    "request": "launch",
+    "name": "Browser Preview: Attach"
+},
+{
+    "type": "msedge",
+    "name": "Launch Microsoft Edge",
+    "request": "launch",
+    "runtimeArgs": [
+        "--remote-debugging-port=9222"
+    ],
+    "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
+    "presentation": {
+        "hidden": true
+    }
+},
+{
+    "type": "msedge",
+    "name": "Launch Microsoft Edge in headless mode",
+    "request": "launch",
+    "runtimeArgs": [
+        "--headless",
+        "--remote-debugging-port=9222"
+    ],
+    "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
+    "presentation": {
+        "hidden": true
+    }
+},
+{
+    "type": "vscode-edge-devtools.debug",
+    "name": "Open Edge DevTools",
+    "request": "attach",
+    "url": "/home/cmcintosh/.vscode/extensions/ms-edgedevtools.vscode-edge-devtools-2.1.9/out/startpage/index.html", // Provide your project's url to finish configuring
+    "presentation": {
+        "hidden": true
+    }
 }

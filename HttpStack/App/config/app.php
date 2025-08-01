@@ -18,10 +18,8 @@ $settings = [
         "routesDir" => APP_ROOT . "/routes"
     ],
     "routeDefs" => "/routes/public.php",
-    "template" =>[
-        "baseLayout" => "base.html",
-        "baseTemplatePath" => APP_ROOT . "/Views/templates/_base.html"
+    "template" => [
+        "baseLayout" => APP_ROOT . "/Views/templates/base.html",
     ]
 ];
 return $settings;
-?>

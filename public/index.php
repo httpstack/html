@@ -10,6 +10,7 @@ require_once(__DIR__ . "/../HttpStack/App/init_dev.php");
 require_once(DOC_ROOT . "/HttpStack/App/util/helpers.php");
 
 use HttpStack\App\App;
+
 $app = new App();
 
 $app->loadRoutes();
@@ -18,4 +19,3 @@ $app->loadRoutes();
 
 
 $app->run();
-?>

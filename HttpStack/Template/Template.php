@@ -1,123 +1,94 @@
 <?php
+
 namespace HttpStack\Template;
 
-use \DOMPXath;
-use DOMDocument;
+use \DOMXPath;
+use \DOMElement;
+use \DOMDocument;
+use \DOMNodeList;
 use HttpStack\IO\FileLoader;
 use HttpStack\Container\Container;
-use HttpStack\Traits\ProcessTemplate;
 use HttpStack\App\Models\TemplateModel;
+use HttpStack\Model\Concrete\BaseModel;
 
-class Template extends DOMDocument{
-    use ProcessTemplate;
-    protected \DOMXPath $map;
-    protected array $variables = [];
-    protected Container $container;
-    protected TemplateModel $model;
+class Template
+{
+    protected DOMDocument $dom;
+    protected DOMXPath $xpath;
+    protected array $templates = [];
+    protected array $assets = [];
+    protected array $functions = [];
+    protected array $data = [];
 
-    public function __construct(string $baseTemplatePath,  TemplateModel $tm){
-
-        //$baseTemplatePath = app()->getSettings()['template']['baseTemplatePath'];
-
-        @$this->loadHTMLFile($baseTemplatePath, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        $this->setMap();
-        $this->setVars($tm->getAll());
-    }
-
-    public function setVars(array $vars){
-        $this->variables = $vars;
-    }
-
-    public function bindAssets(array $assets){
-        
-        $head = $this->map->query("//head")[0];
-        $body = $this->map->query("//body")[0];
-
-        $imagePreloadUrls = [];
-        $required = ["jquery.js"];
-        foreach ($assets as $asset) {
-            $strType = pathinfo($asset, PATHINFO_EXTENSION);
-            $filename = pathinfo($asset, PATHINFO_BASENAME); 
-            $required = str_contains($filename, "required");
-            $src = str_replace(DOC_ROOT, "", $asset);
-            $imagesToPreload = [];
-            switch($strType){
-                case "js":
-
-                        $script = $this->createElement("script");
-                        $script->setAttribute("type", "text/javascript");
-                        if(str_contains($filename, "babel")){
-                            $script->setAttribute("type", "text/babel");
-                        }
-                        $script->setAttribute("src", $src);
-                        if($required){
-                            $head->appendChild($script); 
-                        }else{
-                            $body->appendChild($script);
-                        }
-                break;
-
-                case "jsx":
-                    $script = $this->createElement("script");
-                    $script->setAttribute("type", "text/babel");
-                    $script->setAttribute("src", $src);
-
-                case "css":
-                    $link = $this->createElement("link");
-                    $link->setAttribute('type', 'text/css');
-                    $link->setAttribute('rel', 'stylesheet');
-                    $link ->setAttribute('href', $src);
-                    $head->appendChild($link);
-                break;
-
-                case "woff":
-                case "woff2":
-                case "otf":
-                case "ttf":
-                    $link = $this->createElement("link");
-                    $link->setAttribute("rel", "preload");
-                    $link->setAttribute("href", $src);
-                    $link->setAttribute("as", "font");
-                    $link->setAttribute("type", "font/{$strType}"); 
-                    $link->setAttribute("crossorigin", "anonymous"); // Required for font preloading
-                    $head->appendChild($link);
-                break;
-
-                case "jpg":
-                    $imagesToPreload[] = $src;
-                break;
-            }
-
-        }//foreach
-        if(!empty($imagesToPreload)){
-                $preloaderScriptContent = `
-                (function() {
-                    var imagesToPreload = " . json_encode($imagesToPreload) . ";
-                    imagesToPreload.forEach(function(url) {
-                        var img = new Image();
-                        img.src = url;
-                        // Optional: add event listeners for loaded/error if needed
-                        img.onload = function() { console.log('Preloaded: ' + url); };
-                        // img.onerror = function() { console.error('Failed to preload: ' + url); };
-                    });
-                })();
-            `;
-
-            $script = $this->createElement("script");
-            $script->nodeValue = $preloaderScriptContent; 
-            $body->appendChild($script);
+    public function __construct(protected ?Container $c)
+    {
+        if ($c) {
+            $tm = $c->make(TemplateModel::class);
+            $fl = $c->make(FileLoader::class);
+            $this->data = $tm->getAll();
+            $baseLayout = $fl->readFile($tm->get("baseLayout"));
+            $this->registerTemplate("base", $baseLayout);
+            $this->initTemplate("base");
+            $this->assets = $tm->get("assets");
+        } else {
+            $this->dom = new DOMDocument();
+            $this->dom->preserveWhiteSpace = false;
+            $this->dom->formatOutput = true;
+            $this->xpath = new DOMXPath($this->dom);
         }
-        $this->setMap();
     }
-    public function insertView($viewFragment){
-        $target = $this->map->query("//*[@data-key='view']");
-        $target->append($viewFragment);
+    public function appendAssets(array $assets): void
+    {
+        foreach ($assets as $asset) {
+        }
     }
-    public function setMap(){
-        $this->map = new \DOMXPath($this);
+    public function applyModel(BaseModel $model): void
+    {
+        $this->data = $model->getAll();
     }
-    public function getMap(){
-        return $this->map;
+
+    public function registerTemplate(string $namespace, string $fileName): void
+    {
+        $fl = $this->container->make(FileLoader::class);
+        $path = $fl->findFile($fileName, null, "html");
+        $fileContent = $fl->readFile($path);
+        $this->templates[$namespace] = $fileContent;
+    }
+    public function initTemplate(string $templateName): void
+    {
+        if (!isset($this->templates[$templateName])) {
+            throw new \Exception("Template not found: " . $templateName);
+        }
+        @$this->dom->loadHTML($this->templates[$templateName], LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING | LIBXML_NOERROR);
+        $this->xpath = new DOMXPath($this->dom);
+    }
+    public function getDOM(): DOMDocument
+    {
+        return $this->dom;
+    }
+    protected function dom(?string $htmlOrFile)
+    {
+        if (file_exists($htmlOrFile)) {
+            $this->dom->loadHTMLFile($htmlOrFile, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING | LIBXML_NOERROR);
+        } else if (is_html($htmlOrFile)) {
+            $this->dom->loadHTML($htmlOrFile, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING | LIBXML_NOERROR);
+        }
+        return $this->dom;
+    }
+    protected function xpath(?DOMDocument $dom): DOMXPath
+    {
+        if ($dom) {
+            $this->xpath = new DOMXPath($dom);
+        }
+        return $this->xpath;
+    }
+    public function render()
+    {
+        return $this->dom->saveHTML();
+    }
+
+    public function getXPath(): DOMXPath
+    {
+        return $this->xpath;
     }
 }
-?>

@@ -1,4 +1,5 @@
 <?php
+
 namespace HttpStack\App;
 
 use DBTable;
@@ -18,7 +19,8 @@ use HttpStack\Datasource\FileDatasource;
 use HttpStack\App\Datasources\DB\ActiveTable;
 use HttpStack\App\Datasources\FS\JsonDirectory;
 
-class App{
+class App
+{
     protected Container $container;
     protected Request $request;
     protected Response $response;
@@ -26,7 +28,8 @@ class App{
     protected array $settings = [];
     protected FileLoader $fileLoader;
     public bool $debug = true;
-    public function __construct(string $appPath = "/var/www/html/App") {
+    public function __construct(string $appPath = "/var/www/html/App")
+    {
         $this->container = new Container();
 
         // Bind the essential instances FIRST
@@ -45,59 +48,66 @@ class App{
         $this->reportErrors();
         $GLOBALS["app"] = $this;
     }
-    public function getRequest(){
+    public function getRequest()
+    {
         return $this->request;
     }
-    public function getResponse(){
+    public function getResponse()
+    {
         return $this->response;
-    
     }
-    public function get(Route $route){
+    public function get(Route $route)
+    {
         $this->router->after($route);
     }
 
-    public function loadRoutes(){
+    public function loadRoutes()
+    {
         $routesDir = $this->settings['appPaths']['routesDir'];
         $configs = [];
         //LOOP OVER THE ROUTES DIRECTORY
         //AND GET ROUTE ARRAYS FROM THE FILES
-        foreach (glob($routesDir . '/*.php') as $file){
+        foreach (glob($routesDir . '/*.php') as $file) {
             //$file);
             $routes = include($file);
             //dd($routes);
             //LOOP OVER THE ROUTE ARRAYS AND REGISTER THWE ROUTES / MIDDLEWARES
-            foreach($routes as $route){
-                switch($route->getType()){
+            foreach ($routes as $route) {
+                switch ($route->getType()) {
                     case "after":
                         $this->router->after($route);
-                    break;
+                        break;
 
                     case "before":
                         $this->router->before($route);
-                    break;
+                        break;
                 }
             }
-        }   
-    }
-
-    public function getSettings(){
-        return $this->settings;
-    }
-
-    public function getContainer(){
-        return $this->container;
-    }
-
-    public function reportErrors(){
-        if($this->debug){
-            ini_set("display_errors", 1);
-            ini_set("display_startup_errors", 1);
-            error_reporting(32767);// E_ALL
         }
     }
 
-    public function init(){
-    // --- 1. Load Configurations and Aliases ---
+    public function getSettings()
+    {
+        return $this->settings;
+    }
+
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
+    public function reportErrors()
+    {
+        if ($this->debug) {
+            ini_set("display_errors", 1);
+            ini_set("display_startup_errors", 1);
+            error_reporting(32767); // E_ALL
+        }
+    }
+
+    public function init()
+    {
+        // --- 1. Load Configurations and Aliases ---
         $this->container->singleton('config', function () {
             $configDir = APP_ROOT . "/config";
             $configs = [];
@@ -107,7 +117,7 @@ class App{
             }
             return $configs;
         });
-        
+
         // Load aliases from the config file into the container
         $aliases = $this->container->make('config')['aliases'] ?? [];
         foreach ($aliases as $alias => $fqn) {
@@ -121,9 +131,9 @@ class App{
         $this->container->singleton(DBConnect::class, fn() => new DBConnect());
 
         // --- 3. Bind Models and Views (use `bind` for non-singletons) ---
-        
+
         // Use `bind` because a PageModel is specific to a request
-        $this->container->bind(PageModel::class, function(Container $c) {
+        $this->container->bind(PageModel::class, function (Container $c) {
             // The container will automatically create the DBConnect instance for you!
             $dbDatasource = new ActiveTable($c->make(DBConnect::class), "pages", false);
             return new PageModel($dbDatasource);
@@ -144,24 +154,90 @@ class App{
 
             return $fl;
         });
-        $this->container->singleton("template", function(){
+        $this->container->bind("template", function () {
             $tm = $this->container->make(TemplateModel::class);
             $fl = $this->container->make(FileLoader::class);
-            $baseTemplatePath = $fl->findFile("base.html", null, "html");
-            return new Template($baseTemplatePath, $tm);
+            $cfg = $this->container->make('config')['app']['template'] ?? [];
+            $baseLayout = $cfg['baseLayout'] ?? 'base.html';
+            // Use the FileLoader to find the base template path
+            $baseLayoutPath = $fl->findFile($baseLayout, null, "html");
+            if (!$baseLayoutPath) {
+                throw new \Exception("Base template file not found: " . $baseLayout);
+            }
+            return new Template($baseLayoutPath, $tm);
         });
         // Use a singleton for the TemplateModel if its data is truly global
-        $this->container->singleton(TemplateModel::class, function() {
+        $this->container->singleton(TemplateModel::class, function () {
+            $fl = $this->container->make(FileLoader::class);
+            //FILETYPES TO COLLECT FROM THE ASSETS DIRECTORY
+            //THESE ARE THE FILES THAT WILL BE LOADED INTO THE TEMPLATE
+            $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
+
             $dataDirectory = appPath("dataDir") . "/template";
             $dataSource = new JsonDirectory($dataDirectory, true);
-            
+
             $t = new TemplateModel($dataSource);
+            /**
+             * PREPARE THE DATA MODEL SO THAT DEEPLY NESTED DATA IS AVAILABLE
+             * ON THE FIRST LEVEL OF THE ARRAY.
+             * REPLACE DATA HAS ITS MATCHING KEYS IN THE TEMPLATE.
+             * ANY data-repeat WILL LOOK TO THE REPLACE DATA ARRAY (the template model)
+             * FOR THE DATA TO REPEAT.
+             * 
+             * VARIABLES CREATED TO BE USED BY TEMPLATE CLASS
+             * @var array $links
+             * @var array $links_social
+             * @var array $links_footer
+             */
+            $links          = $t->get("links")["main"];
+            $links_social   = $t->get("links")["social"];
+            $links_footer   = $t->get("links")["footer"];
+            $baseLayout     = config("template")['baseLayout'];
+            $assets         = $fl->findFilesByExtension($assetTypes, null);
+
+            /** 
+             * @var string $baseLayout
+             * @var array $assets
+             * 
+             * THESE VARIABLES ARE USED IN THE TEMPLATE
+             * @var array $t->data
+             * @var string [appName]
+             * @var string [appSlogan]
+             * @var string [appIcon]
+             * @var string [appCopyright]
+             * @var array [links]
+             * @var array [links.social]
+             * @var array [links.footer]
+             * 
+             * THE ASSETS ARE LOADED INTO THE DOCUMENT HEAD OR BODY AS SCRIPT OR LINK TAGS
+             * AFTER APPENDING THE ASSETS< REMOVE IOT FROM THE MODEL AS IT IS NOT NEEDED
+             * IN THE TEMPLATE.
+             * @var array [assets]
+             * 
+             */
+            $temp = [];
+            $replaceData = $t->get("base.json");
+            $temp["links"] = $links;
+            $temp["links_social"] = $links_social;
+            $temp["links_footer"] = $links_footer;
+            $temp["baseLayout"] = $baseLayout;
+            $temp["assets"] = $assets;
+            foreach ($replaceData as $k => $v) {
+                $temp[$k] = $v;
+            }
+            $t->setAll((array)$temp);
             return $t;
         });
-            
+
+        $this->container->bind(View::class, function (Container $c) {
+            return new View($c);
+        });
+        $this->container->singleton(Template::class, function (Container $c) {
+            return new Template($c);
+        });
     }
-    public function run(){
+    public function run()
+    {
         $this->router->dispatch($this->request, $this->response, $this->container);
     }
 }
-?>

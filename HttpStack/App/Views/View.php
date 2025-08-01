@@ -1,4 +1,5 @@
 <?php
+
 namespace HttpStack\App\Views;
 
 
@@ -11,63 +12,53 @@ use HttpStack\Container\Container;
 use HttpStack\Model\AbstractModel;
 use HttpStack\App\Models\TemplateModel;
 
-class View {
+class View
+{
 
     protected Template $template;
     protected Response $response;
+    protected Request $request;
     protected string $view;
     protected Container $container;
 
-    public function __construct(Request $req, Response $res, Container $container){
+    public function __construct(Container $c)
+    {
         // make sure templateModel is foing the logic of preparing the model since 
         // it is the concrete model 
         //box(abstract) is a helper for $container->make(abstract);
-        $this->container = $container;
-        $this->response = $res;
-        $assetTypes = ["js", "css", "woff", "woff2", "otf", "ttf", "jpg", "jsx"];
-        $this->template = $container->make("template");
-        $fl = $container->make(FileLoader::class);
-        $assets = $fl->findFilesByExtension($assetTypes, null);
-        $this->template->bindAssets($assets);
-        /*
-        //example of defining a function with parameter
-        $this->template->define("myFunc", function($myparam){
-            return $myparam;
-        });
-        */
+        $this->response = $c->make(Response::class);
+        $this->request = $c->make(Request::class);
+        $this->template = $c->make(Template::class);
     }
-    public function loadView(string $filePath){
+    public function loadView(string $domainView)
+    {
+        dd($domainView);
         $fl = $this->container->make(FileLoader::class);
-        $fileContent = $fl->readFile($filePath);
-        $viewNode = $this->toDomObject($fileContent);
-        $frag = $this->template->createDocumentFragment();
-        foreach (iterator_to_array($viewNode->childNodes) as $childNode) {
-            $importedNode = $this->template->importNode($childNode, true); // true for deep clone
-            $frag->appendChild($importedNode);
-        }
-        $targetNode = $this->template->getMap()->query('//*[@data-key="view"]')->item(0);
-        $targetNode->appendChild($frag);
+        $p = $fl->findFile($domainView, null, "html");
+        dd($p);
     }
-    protected function toDomObject($str){
+    protected function toDomObject($str)
+    {
         $dom = new \DOMDocument();
-        libxml_use_internal_errors(true);
-        @$dom->loadHTML($str, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING);
-        libxml_clear_errors();
+        @$dom->loadHTML($str, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOWARNING | LIBXML_NOERROR);
         return $dom;
     }
 
-    public function render(){
+    public function render()
+    {
         $html = $this->template->render();
         $this->response->setContentType("text/html")->setBody($html);
     }
-    public function getView(){
+    public function getView()
+    {
         return $this->view;
     }
-    public function getTemplate(){
+    public function getTemplate()
+    {
         return $this->template;
     }
-    public function importView(string $filePath){
+    public function importView(string $filePath)
+    {
         $this->template->importView($filePath);
     }
 }
-?>
