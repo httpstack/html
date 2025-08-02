@@ -5,16 +5,13 @@
             "name": "Listen for Xdebug",
             "type": "php",
             "request": "launch",
-            "port": 9003, // This must match xdebug.client_port in php.ini
+            "port": 9003,
             "pathMappings": {
-                // This is CRUCIAL for mapping your local project path to the server's path.
-                // If your project is at /var/www/html/my-project on the server
-                // and /Users/youruser/Projects/my-project on your local machine:
-                "/var/www/html/": "${workspaceFolder}/" // Example for Linux server
-                // Or for a Docker container:
-                // "/var/www/html": "${workspaceFolder}"
-                // Or if your project root *is* the web root on the server:
-                // "/path/to/your/web/root": "${workspaceFolder}"
+                // This is the most crucial part.
+                // It maps the server's path to your local project's path.
+                // The key is the path on the server, the value is your local path.
+                // Example: "/var/www/html" on the server maps to the root of your VS Code workspace.
+                "/var/www/html": "${workspaceFolder}"
             }
         },
         {

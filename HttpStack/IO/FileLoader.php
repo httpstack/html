@@ -73,11 +73,11 @@ class FileLoader
         return $this->mappedDirectories;
     }
 
-    /**
+/**
      * Find a file by name in mapped directories (searches subdirectories).
      *
-     * This method now directly constructs potential file paths based on mapped directories
-     * and the provided name (which can include subdirectories like "public/home").
+     * This method now handles absolute paths and paths with subdirectories relative
+     * to the mapped directories.
      *
      * @param string $name The base name or path relative to a mapped directory (e.g., "public/home").
      * @param string|null $directory Optional. The name of a specific mapped directory to search within, or null to search all.
@@ -86,47 +86,78 @@ class FileLoader
      */
     public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
     {
-        // Normalize the search name to use forward slashes for consistency across OS
-        $normalizedName = str_replace('\\', '/', $name);
+        echo $name;
+        // 1. Handle absolute paths directly
+        if (is_file($name) && realpath($name) === $name) {
+            return $name;
+        }
 
-        // Determine the final extension to use. Prioritize provided extension, then defaultExtension.
+        // 2. Normalize the search name to use forward slashes for consistency across OS
+        $normalizedName = str_replace('\\', '/', trim($name, '/'));
+
+        // 3. Determine the final extension to use. Prioritize provided extension, then defaultExtension.
         $finalExtension = $extension ?? $this->defaultExtension;
 
-        // Add the determined extension to the normalized name if it's not already present.
-        // pathinfo correctly handles names with slashes (e.g., "public/home" has no extension).
+        // 4. Check if the provided name already has an extension. If not, append the default one.
         if (!empty($finalExtension) && pathinfo($normalizedName, PATHINFO_EXTENSION) === '') {
             $normalizedName .= '.' . ltrim($finalExtension, '.');
         }
 
         $searchBaseDirectories = [];
+        
+        // Split the normalized name into a directory and a file, for example 'public/home.html' becomes ['public', 'home.html'].
+        $parts = explode('/', $normalizedName, 2);
 
-        // Determine which base directories to search
-        if ($directory !== null) {
-            // If a specific directory name is provided, use its mapped path
-            $baseDir = $this->mappedDirectories[$directory] ?? $directory; // Allow direct path if not mapped
-            if (is_dir($baseDir)) {
-                $searchBaseDirectories[] = $baseDir;
+        // This is the new logic to handle your use case.
+        if (count($parts) > 1) {
+            $subDirectory = $parts[0]; // The folder name, e.g., 'public'
+            $fileName = $parts[1]; // The file name, e.g., 'home.html'
+
+            if ($directory !== null && $directory === $subDirectory) {
+                // If a specific mapped directory is provided AND it matches the subdirectory in the name,
+                // we search within that mapped directory.
+                $baseDir = $this->mappedDirectories[$directory] ?? null;
+                if ($baseDir && is_dir($baseDir)) {
+                    // Construct the final search path by appending the rest of the file path.
+                    $fullPath = rtrim($baseDir, '/') . '/' . $fileName;
+                    if (is_file($fullPath)) {
+                        return $fullPath;
+                    }
+                }
+            } else if ($directory === null) {
+                // If no specific mapped directory is provided, we search ALL mapped directories
+                // for a folder with the name from the input string (e.g., 'public').
+                foreach ($this->mappedDirectories as $baseDir) {
+                    $searchPath = rtrim($baseDir, '/') . '/' . $normalizedName;
+                    if (is_file($searchPath)) {
+                        return $searchPath;
+                    }
+                }
             }
         } else {
-            // If no specific directory, search all mapped directories
-            foreach ($this->mappedDirectories as $baseDir) {
-                if (is_dir($baseDir)) {
+             // 5. If the name is just a file (no slash), proceed with the original logic.
+            if ($directory !== null) {
+                $baseDir = $this->mappedDirectories[$directory] ?? null;
+                if ($baseDir && is_dir($baseDir)) {
                     $searchBaseDirectories[] = $baseDir;
+                }
+            } else {
+                foreach ($this->mappedDirectories as $baseDir) {
+                    if (is_dir($baseDir)) {
+                        $searchBaseDirectories[] = $baseDir;
+                    }
+                }
+            }
+
+            // 6. Iterate through the determined base directories and check for the file
+            foreach ($searchBaseDirectories as $baseDir) {
+                $fullPath = rtrim($baseDir, '/') . '/' . $normalizedName;
+                if (is_file($fullPath)) {
+                    return $fullPath;
                 }
             }
         }
-
-        // Iterate through the determined base directories and check for the file
-        foreach ($searchBaseDirectories as $baseDir) {
-            // Construct the full potential path
-            $fullPath = rtrim($baseDir, '/') . '/' . $normalizedName;
-
-            // Check if the file exists at this full path and is a regular file
-            if (file_exists($fullPath) && is_file($fullPath)) {
-                return $fullPath;
-            }
-        }
-
+       
         return null; // File not found in any of the specified or mapped directories
     }
 

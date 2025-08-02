@@ -19,10 +19,13 @@ class Template
     protected array $assets = [];
     protected array $functions = [];
     protected array $data = [];
+    protected Container $container;
 
     public function __construct(protected ?Container $c)
     {
-        if ($c) {
+       
+        if ($c) {   
+            $this->container = $c;
             $tm = $c->make(TemplateModel::class);
             $fl = $c->make(FileLoader::class);
             $this->data = $tm->getAll();

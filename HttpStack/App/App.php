@@ -189,9 +189,9 @@ class App
              * @var array $links_social
              * @var array $links_footer
              */
-            $links          = $t->get("links")["main"];
-            $links_social   = $t->get("links")["social"];
-            $links_footer   = $t->get("links")["footer"];
+            $links          = $t->get("links.json")["main"];
+            $links_social   = $t->get("links.json")["social"];
+            $links_footer   = $t->get("links.json")["footer"];
             $baseLayout     = config("template")['baseLayout'];
             $assets         = $fl->findFilesByExtension($assetTypes, null);
 
@@ -226,6 +226,7 @@ class App
                 $temp[$k] = $v;
             }
             $t->setAll((array)$temp);
+            //dd($t->getAll());
             return $t;
         });
 

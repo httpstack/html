@@ -42,5 +42,22 @@
             "uri": "instagram.com\/httpstack",
             "icon": "bs-"
         }
+    ],
+    "footer": [
+        {
+            "label": "Privacy Policy",
+            "uri": "\/privacy-policy",
+            "icon": "bi bi-shield-lock"
+        },
+        {
+            "label": "Terms of Service",
+            "uri": "\/terms-of-service",
+            "icon": "bi bi-file-earmark-text"
+        },
+        {
+            "label": "Contact Us",
+            "uri": "\/contact-us",
+            "icon": "bi bi-envelope-fill"
+        }
     ]
 }
