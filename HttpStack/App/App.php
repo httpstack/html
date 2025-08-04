@@ -192,7 +192,7 @@ class App
             $links          = $t->get("links.json")["main"];
             $links_social   = $t->get("links.json")["social"];
             $links_footer   = $t->get("links.json")["footer"];
-            $baseLayout     = config("template")['baseLayout'];
+            $baseLayout     = $this->container->make("config")["app"]['baseLayout'];
             $assets         = $fl->findFilesByExtension($assetTypes, null);
 
             /** 

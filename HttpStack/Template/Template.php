@@ -23,21 +23,20 @@ class Template
 
     public function __construct(protected ?Container $c)
     {
-       
-        if ($c) {   
+        if ($c) {
             $this->container = $c;
             $tm = $c->make(TemplateModel::class);
             $fl = $c->make(FileLoader::class);
             $this->data = $tm->getAll();
-            $baseLayout = $fl->readFile($tm->get("baseLayout"));
+            $baseLayout = $tm->get('baseLayout');
             $this->registerTemplate("base", $baseLayout);
-            $this->initTemplate("base");
-            $this->assets = $tm->get("assets");
-        } else {
             $this->dom = new DOMDocument();
             $this->dom->preserveWhiteSpace = false;
             $this->dom->formatOutput = true;
             $this->xpath = new DOMXPath($this->dom);
+            $this->initTemplate("base");
+            $this->assets = $tm->get("assets");
+        } else {
         }
     }
     public function appendAssets(array $assets): void
@@ -52,7 +51,9 @@ class Template
 
     public function registerTemplate(string $namespace, string $fileName): void
     {
+        echo "Registering template: $namespace from file: $fileName\n";
         $fl = $this->container->make(FileLoader::class);
+
         $path = $fl->findFile($fileName, null, "html");
         $fileContent = $fl->readFile($path);
         $this->templates[$namespace] = $fileContent;

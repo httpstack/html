@@ -32,10 +32,10 @@ class View
     }
     public function loadView(string $domainView)
     {
-        dd($domainView);
+        echo "Loading view: $domainView\n";
         $fl = $this->container->make(FileLoader::class);
         $p = $fl->findFile($domainView, null, "html");
-        dd($p);
+        echo "View found at: $p\n";
     }
     protected function toDomObject($str)
     {
