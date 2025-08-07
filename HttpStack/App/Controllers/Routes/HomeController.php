@@ -25,7 +25,7 @@ class HomeController
     protected function home($req, $res, $container, $matches)
     {
         echo "HomeController home called\n";
-        $v = $container->make("view", ["public/home"]);
+        $v = $container->make("view.factory", "public/home");
         $v->render();
         if (!$res->sent) {
             $res->send();

@@ -18,7 +18,6 @@ class View
     protected Template $template;
     protected Response $response;
     protected Request $request;
-    protected string $view;
     protected Container $container;
 
     public function __construct(Container $c)
@@ -31,14 +30,13 @@ class View
         $this->template = $c->make(Template::class);
         $this->container = $c;
     }
-    public function loadView()
+    public function loadView(string $view)
     {
-
-        $viewRoute = $this->container->make("viewRoute");
-        echo "View route: " . get_class($viewRoute) . "\n";
-        $fl = $this->container->make(FileLoader::class);
-        $p = $fl->findFile($viewRoute, null, "html");
-        echo "View found at: $p\n";
+        $fl = box(FileLoader::class);
+        
+        //var_dump($fl);
+        $p = $fl->readFile($view, null, 'html');
+        echo "View $view found at: $p\n";
     }
     protected function toDomObject($str)
     {

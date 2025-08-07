@@ -29,26 +29,9 @@ class TemplateInit
     $v = $container->make(View::class, $container);
     //register the view namespace agian, returning this view
     // that has the template object within it.
-    $container->singleton("view", function (array $args) use ($v) {
-      //HERE the view will be re-called but getting the $v (view) we already
-      //created on line 31
-      //
-      //  $v = new View($req, $res, $container);
-      //  this line above will instantiate view that in its construct, will:
-      //  1.) "make" template from container and bind it to the $v->template;
-      //  2.) get the asset file list from filoader and bind them to the template
-      //  3.) Tie the current Response, Container and Request to the $v (view)
-      //  4.) THATS IT! the state of the template at this point is the base template
-      //      waiting for the controllor to call the containers->make("view", "public/home")
-      //        or whatever the view.
 
-      //AT THIS POINT the template has been built and the $view is the folder/basename
-      //to load
-      $fl = $c->make(FileLoader::class);
-      $container->bind("viewRoute", $v);
-      $viewPath = $fl->findFile("home.html", null, "html");
-
-      $v->loadView();
+    $container->bind('view.factory', function (Container $c, string $view) use ($v) {
+      $v->loadView($view);
       return $v;
     });
 

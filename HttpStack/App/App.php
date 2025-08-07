@@ -131,16 +131,22 @@ class App
         $this->container->singleton(DBConnect::class, fn() => new DBConnect());
 
         $this->container->singleton(FileLoader::class, function (Container $c) {
-
-            // We need the 'config' service to get the application settings
-            $settings = $c->make('config')['app'];
+            $config = $c->make('config');
+            if (!isset($config['app'])) {
+                throw new \RuntimeException("Config 'app' section missing. Check your config files.");
+            }
+            $settings = $config['app'];
             $fl = new FileLoader();
 
-            // Loop over the appPaths and map them, just like in your original code
-            if (!empty($settings['appPaths']) && is_array($settings['appPaths'])) {
-                foreach ($settings['appPaths'] as $name => $path) {
-                    $fl->mapDirectory($name, $path);
+            if (empty($settings['appPaths']) || !is_array($settings['appPaths'])) {
+                throw new \RuntimeException("Config 'appPaths' missing or not an array. Check your config/app.php.");
+            }
+
+            foreach ($settings['appPaths'] as $name => $path) {
+                if (!is_dir($path)) {
+                    error_log("Warning: Directory for appPath '$name' does not exist: $path");
                 }
+                $fl->mapDirectory($name, $path);
             }
 
             return $fl;
