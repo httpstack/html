@@ -51,7 +51,7 @@ class Template
 
     public function registerTemplate(string $namespace, string $fileName): void
     {
-        echo "Registering template: $namespace from file: $fileName\n";
+        // echo "Registering template: $namespace from file: $fileName\n";
         $fl = $this->container->make(FileLoader::class);
 
         $path = $fl->findFile($fileName, null, "html");

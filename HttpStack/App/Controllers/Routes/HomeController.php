@@ -19,11 +19,13 @@ class HomeController
         // or if the user has a specific account preference,
 
         $subRoutes = $req->getSubRoutes();
+        echo "HomeController index called\n";
         $this->home($req, $res, $container, $matches);
     }
     protected function home($req, $res, $container, $matches)
     {
-        $v = $container->make("view", "home");
+        echo "HomeController home called\n";
+        $v = $container->make("view", ["public/home"]);
         $v->render();
         if (!$res->sent) {
             $res->send();

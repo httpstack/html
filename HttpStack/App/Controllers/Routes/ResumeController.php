@@ -23,6 +23,7 @@ class ResumeController
     }
     protected function resume($req, $res, $container, $matches)
     {
+        echo "resume";
         $v = $container->make("view", "public/resume");
         $v->render();
         if (!$res->sent) {

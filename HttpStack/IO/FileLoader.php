@@ -73,7 +73,7 @@ class FileLoader
         return $this->mappedDirectories;
     }
 
-/**
+    /**
      * Find a file by name in mapped directories (searches subdirectories).
      *
      * This method now handles absolute paths and paths with subdirectories relative
@@ -86,7 +86,7 @@ class FileLoader
      */
     public function findFile(string $name, ?string $directory = null, ?string $extension = null): ?string
     {
-        echo $name;
+        // echo $name;
         // 1. Handle absolute paths directly
         if (is_file($name) && realpath($name) === $name) {
             return $name;
@@ -104,7 +104,7 @@ class FileLoader
         }
 
         $searchBaseDirectories = [];
-        
+
         // Split the normalized name into a directory and a file, for example 'public/home.html' becomes ['public', 'home.html'].
         $parts = explode('/', $normalizedName, 2);
 
@@ -135,7 +135,7 @@ class FileLoader
                 }
             }
         } else {
-             // 5. If the name is just a file (no slash), proceed with the original logic.
+            // 5. If the name is just a file (no slash), proceed with the original logic.
             if ($directory !== null) {
                 $baseDir = $this->mappedDirectories[$directory] ?? null;
                 if ($baseDir && is_dir($baseDir)) {
@@ -157,7 +157,7 @@ class FileLoader
                 }
             }
         }
-       
+
         return null; // File not found in any of the specified or mapped directories
     }
 

@@ -130,15 +130,6 @@ class App
         $this->container->singleton(Router::class, fn() => new Router());
         $this->container->singleton(DBConnect::class, fn() => new DBConnect());
 
-        // --- 3. Bind Models and Views (use `bind` for non-singletons) ---
-
-        // Use `bind` because a PageModel is specific to a request
-        $this->container->bind(PageModel::class, function (Container $c) {
-            // The container will automatically create the DBConnect instance for you!
-            $dbDatasource = new ActiveTable($c->make(DBConnect::class), "pages", false);
-            return new PageModel($dbDatasource);
-        });
-
         $this->container->singleton(FileLoader::class, function (Container $c) {
 
             // We need the 'config' service to get the application settings
@@ -154,18 +145,7 @@ class App
 
             return $fl;
         });
-        $this->container->bind("template", function () {
-            $tm = $this->container->make(TemplateModel::class);
-            $fl = $this->container->make(FileLoader::class);
-            $cfg = $this->container->make('config')['app']['template'] ?? [];
-            $baseLayout = $cfg['baseLayout'] ?? 'base.html';
-            // Use the FileLoader to find the base template path
-            $baseLayoutPath = $fl->findFile($baseLayout, null, "html");
-            if (!$baseLayoutPath) {
-                throw new \Exception("Base template file not found: " . $baseLayout);
-            }
-            return new Template($baseLayoutPath, $tm);
-        });
+
         // Use a singleton for the TemplateModel if its data is truly global
         $this->container->singleton(TemplateModel::class, function () {
             $fl = $this->container->make(FileLoader::class);
@@ -230,7 +210,7 @@ class App
             return $t;
         });
 
-        $this->container->bind(View::class, function (Container $c) {
+        $this->container->singleton(View::class, function (Container $c) {
             return new View($c);
         });
         $this->container->singleton(Template::class, function (Container $c) {

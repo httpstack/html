@@ -29,12 +29,15 @@ class View
         $this->response = $c->make(Response::class);
         $this->request = $c->make(Request::class);
         $this->template = $c->make(Template::class);
+        $this->container = $c;
     }
-    public function loadView(string $domainView)
+    public function loadView()
     {
-        echo "Loading view: $domainView\n";
+
+        $viewRoute = $this->container->make("viewRoute");
+        echo "View route: " . get_class($viewRoute) . "\n";
         $fl = $this->container->make(FileLoader::class);
-        $p = $fl->findFile($domainView, null, "html");
+        $p = $fl->findFile($viewRoute, null, "html");
         echo "View found at: $p\n";
     }
     protected function toDomObject($str)

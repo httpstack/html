@@ -26,10 +26,10 @@ class TemplateInit
    */
   public function process(Request $req, Response $res, Container $container)
   {
-    $v = $container->make(View::class, [$container]);
+    $v = $container->make(View::class, $container);
     //register the view namespace agian, returning this view
     // that has the template object within it.
-    $container->bind("view", function (Container $c, string $view) use ($v) {
+    $container->singleton("view", function (array $args) use ($v) {
       //HERE the view will be re-called but getting the $v (view) we already
       //created on line 31
       //
@@ -45,9 +45,10 @@ class TemplateInit
       //AT THIS POINT the template has been built and the $view is the folder/basename
       //to load
       $fl = $c->make(FileLoader::class);
-      $viewPath = $fl->findFile($view, null, "html");
+      $container->bind("viewRoute", $v);
+      $viewPath = $fl->findFile("home.html", null, "html");
 
-      $v->loadView($viewPath);
+      $v->loadView();
       return $v;
     });
 
